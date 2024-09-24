@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\koend\\RiderProjects\\Mandelbrot\\Mandelbrot.csproj",
+      "projectUniqueName": "C:\\Users\\koend\\RiderProjects\\UniMandelbrot\\Mandelbrot.csproj",
       "projectName": "Mandelbrot",
-      "projectPath": "C:\\Users\\koend\\RiderProjects\\Mandelbrot\\Mandelbrot.csproj",
+      "projectPath": "C:\\Users\\koend\\RiderProjects\\UniMandelbrot\\Mandelbrot.csproj",
       "packagesPath": "C:\\Users\\koend\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\koend\\RiderProjects\\Mandelbrot\\obj\\",
+      "outputPath": "C:\\Users\\koend\\RiderProjects\\UniMandelbrot\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\koend\\AppData\\Roaming\\NuGet\\NuGet.Config"

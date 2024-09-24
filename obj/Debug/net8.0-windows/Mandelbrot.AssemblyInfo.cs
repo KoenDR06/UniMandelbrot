@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Mandelbrot")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fd63976345441f208598f33b30706a701053a5f6")]
 [assembly: System.Reflection.AssemblyProductAttribute("Mandelbrot")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Mandelbrot")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -12,8 +12,7 @@ label.Size = new Size(resolution, resolution);
 
 Bitmap img = new Bitmap(resolution, resolution);
 
-string filename = "C:\\Users\\koend\\RiderProjects\\Mandelbrot\\presets\\default.mandel";
-
+string filename = Directory.GetCurrentDirectory() + "\\presets\\default.mandel";
 (double xCenter, double yCenter, double zoom, int maxIters, RenderMode? renderMode) = Renderer.ImportMandelbrot(filename, true);
 
 renderMode.julia = false;
@@ -65,7 +64,7 @@ label.MouseClick += OnClick;
 Render();
 Application.Run(screen);
 
-filename = "C:\\Users\\koend\\RiderProjects\\Mandelbrot\\data.mandel";
+filename = System.IO.Directory.GetCurrentDirectory() + "\\data.mandel";
 Renderer.ExportMandelbrot(filename, xCenter, yCenter, zoom, maxIters, renderMode);
 
 Bitmap renderImage = new Bitmap(512, 512);
@@ -78,4 +77,4 @@ label.Image = Renderer.RenderMandelbrot(
     renderImage
 );
 
-renderImage.Save("C:\\Users\\koend\\RiderProjects\\Mandelbrot\\render.png", ImageFormat.Png);
+renderImage.Save(System.IO.Directory.GetCurrentDirectory() + "\\render.png", ImageFormat.Png);
