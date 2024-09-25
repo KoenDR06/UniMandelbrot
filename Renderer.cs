@@ -8,7 +8,7 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, doubl
     public double XCenter = xCenter;
     public double YCenter = yCenter;
     public double Zoom = zoom;
-    readonly Bitmap img = new Bitmap(resolution, resolution);
+    readonly Bitmap _img = new Bitmap(resolution, resolution);
     
     int IteratePoint(double zReal, double zImag, double cReal, double cImag) {
         int iterations = 0;
@@ -55,13 +55,13 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, doubl
     public Bitmap RenderMandelbrot(double juliaX = 0, double juliaY = 0) {
         List<Thread> threads = [];
         
-        int width = img.Width;
+        int width = _img.Width;
         for (int i = 0; i < Environment.ProcessorCount; i++) {
             int endX;
             if (i + 1 != Environment.ProcessorCount) {
                 endX = (i + 1) * (width / Environment.ProcessorCount);
             } else {
-                endX = img.Width;
+                endX = _img.Width;
             }
             
             Thread thread = new Thread(
@@ -83,7 +83,7 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, doubl
             thread.Join();
         }
         
-        return img;
+        return _img;
     }
     
     
@@ -232,6 +232,6 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, doubl
     }
 
     public void SaveRenderedImage(string filename) {
-        img.Save(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\render.png", ImageFormat.Png);
+        _img.Save(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\render.png", ImageFormat.Png);
     }
 }

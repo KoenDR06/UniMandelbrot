@@ -1,7 +1,8 @@
 using System.Diagnostics;
+using System.Drawing.Imaging;
 using Mandelbrot;
 
-int resolution = 1024;
+int resolution = 512;
 
 Form screen = new Form();
 screen.ClientSize = new Size(resolution, resolution);
@@ -10,10 +11,10 @@ screen.Controls.Add(label);
 label.Location = new Point(0, 0);
 label.Size = new Size(resolution, resolution);
 
-Bitmap img = new Bitmap(resolution, resolution);
+Bitmap img = new Bitmap(resolution, resolution, PixelFormat.Format24bppRgb);
 
 string filename = Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\default.mandel";
-Renderer renderer = Renderer.ImportMandelbrot(filename);
+Renderer renderer = Renderer.ImportMandelbrot(filename, resolution);
 
 void Render() {
     Stopwatch stopWatch = new Stopwatch();
