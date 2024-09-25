@@ -8,7 +8,10 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, doubl
     public double XCenter = xCenter;
     public double YCenter = yCenter;
     public double Zoom = zoom;
-    readonly Bitmap _img = new Bitmap(resolution, resolution);
+
+    Bitmap _img = new Bitmap(resolution, resolution, PixelFormat.Format24bppRgb);
+    byte[] data = [];
+    BitmapData bData;
     
     int IteratePoint(double zReal, double zImag, double cReal, double cImag) {
         int iterations = 0;
@@ -46,13 +49,28 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, doubl
                 } else {
                     pointColor = renderMode.CalculateColor(iters, MaxIters);
                 }
-                // img.SetPixel(x, y, pointColor);
-                // todo fix this issue. Bitmap can't be accessed by multiple threads at a time.
+                
+                int index = y * bData.Stride + 3*x;
+                data[index] = pointColor.B;
+                data[index+1] = pointColor.R;
+                data[index+2] = pointColor.G;
+                
+                // _img.SetPixel(x, y, pointColor);
             }
         }
     }
     
     public Bitmap RenderMandelbrot(double juliaX = 0, double juliaY = 0) {
+        _img.Dispose();
+        _img = new Bitmap(resolution, resolution, PixelFormat.Format24bppRgb);
+        // start of copied code from: https://stackoverflow.com/questions/1563038/fast-work-with-bitmaps-in-c-sharp
+        bData = _img.LockBits(new Rectangle(0, 0, _img.Width, _img.Height), ImageLockMode.ReadWrite, _img.PixelFormat);
+        int bitsPerPixel = Image.GetPixelFormatSize(_img.PixelFormat);
+        int size = bData.Stride * bData.Height;
+        data = new byte[size];
+        System.Runtime.InteropServices.Marshal.Copy(bData.Scan0, data, 0, size);
+        // end of copied code from: https://stackoverflow.com/questions/1563038/fast-work-with-bitmaps-in-c-sharp
+        
         List<Thread> threads = [];
         
         int width = _img.Width;
@@ -82,6 +100,11 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, doubl
         foreach (Thread thread in threads) {
             thread.Join();
         }
+        
+        // start of copied code from: https://stackoverflow.com/questions/1563038/fast-work-with-bitmaps-in-c-sharp
+        System.Runtime.InteropServices.Marshal.Copy(data, 0, bData.Scan0, data.Length);
+        _img.UnlockBits(bData);
+        // end of copied code from: https://stackoverflow.com/questions/1563038/fast-work-with-bitmaps-in-c-sharp
         
         return _img;
     }
@@ -232,6 +255,6 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, doubl
     }
 
     public void SaveRenderedImage(string filename) {
-        _img.Save(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\render.png", ImageFormat.Png);
+        _img.Save(filename, ImageFormat.Png);
     }
 }

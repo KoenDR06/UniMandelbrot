@@ -162,7 +162,7 @@ public class Triangle(List<(Color start, Color end)> colorList, int size, int n)
 
     public static Triangle GenerateRandom() {
         Random rnd = new Random();
-        int colorLength = rnd.Next(2, 10);
+        int colorLength = rnd.Next(2, 5);
         List<(Color, Color)> colors = [];
         
         for (int i = 0; i < colorLength; i++) {
@@ -174,7 +174,7 @@ public class Triangle(List<(Color start, Color end)> colorList, int size, int n)
 
         return new Triangle(
             colors,
-            rnd.Next(3, 10),
+            rnd.Next(3, 32),
             rnd.Next(1, 5)
         );
     }
@@ -196,7 +196,7 @@ public class Triangle(List<(Color start, Color end)> colorList, int size, int n)
                 (Color.Black, Color.FromArgb(255, 255, 000, 255)),
                 (Color.Black, Color.FromArgb(255, 255, 000, 128)),
             },
-            6,
+            10,
             1);
     }
 }

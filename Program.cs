@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using Mandelbrot;
 
-int resolution = 512;
+int resolution = 4096;
 
 Form screen = new Form();
 screen.ClientSize = new Size(resolution, resolution);
@@ -11,9 +11,8 @@ screen.Controls.Add(label);
 label.Location = new Point(0, 0);
 label.Size = new Size(resolution, resolution);
 
-Bitmap img = new Bitmap(resolution, resolution, PixelFormat.Format24bppRgb);
-
-string filename = Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\default.mandel";
+string filename = Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\infinite_spiral.mandel";
+// Renderer renderer = new Renderer(resolution, 256, Triangle.RAINBOW_TRIANGLE());
 Renderer renderer = Renderer.ImportMandelbrot(filename, resolution);
 
 void Render() {
@@ -58,3 +57,6 @@ filename = Directory.GetCurrentDirectory() + "..\\..\\..\\..\\data.mandel";
 renderer.ExportMandelbrot(filename);
 
 label.Image = renderer.RenderMandelbrot();
+
+
+renderer.SaveRenderedImage(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\render.png");
