@@ -1,4 +1,4 @@
-using System.Drawing.Imaging;
+using System.Diagnostics;
 using Mandelbrot;
 
 int resolution = 1024;
@@ -13,46 +13,35 @@ label.Size = new Size(resolution, resolution);
 Bitmap img = new Bitmap(resolution, resolution);
 
 string filename = Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\default.mandel";
-(double xCenter, double yCenter, double zoom, int maxIters, RenderMode? renderMode) = Renderer.ImportMandelbrot(filename, true);
-
-renderMode.julia = false;
-
-renderMode = Triangle.RAINBOW_TRIANGLE();
+Renderer renderer = Renderer.ImportMandelbrot(filename);
 
 void Render() {
-    img.Dispose();
-    img = new Bitmap(resolution, resolution);
-    label.Image = Renderer.RenderMandelbrot(  
-        xCenter,
-        yCenter,
-        zoom,
-        maxIters,
-        renderMode,
-        img,
-        juliaX: -0.5423295792003203,
-        juliaY: 0.6149806437039895
-    );
+    Stopwatch stopWatch = new Stopwatch();
+    stopWatch.Start();
+    label.Image = renderer.RenderMandelbrot();
+    stopWatch.Stop();
+    Console.WriteLine(stopWatch.Elapsed);
 }
 
 void OnScroll(object? o, MouseEventArgs mea) {
-    if (mea.Delta >= 1200) { maxIters *= 2; }
-    else if (mea.Delta <= -1200) { maxIters /= 2; }
-    else maxIters += mea.Delta / 12;
+    if (mea.Delta >= 1200) { renderer.MaxIters *= 2; }
+    else if (mea.Delta <= -1200) { renderer.MaxIters /= 2; }
+    else renderer.MaxIters += mea.Delta / 12;
     
-    if (maxIters <= 1) maxIters = 1;
+    if (renderer.MaxIters <= 1) renderer.MaxIters = 1;
 
     Render();
 }
 
 void OnClick(object? o, MouseEventArgs mea) {
-    xCenter = Math.Exp(-1.0 * zoom) * (4.0 * mea.X / resolution - 2.0) + xCenter;
-    yCenter = Math.Exp(-1.0 * zoom) * (4.0 * mea.Y / resolution - 2.0) + yCenter;
+    renderer.XCenter = Math.Exp(-1.0 * renderer.Zoom) * (4.0 * mea.X / resolution - 2.0) + renderer.XCenter;
+    renderer.YCenter = Math.Exp(-1.0 * renderer.Zoom) * (4.0 * mea.Y / resolution - 2.0) + renderer.YCenter;
     if (mea.Button == MouseButtons.Left) {
-        zoom += 1;
-        maxIters += 10;
+        renderer.Zoom += 1;
+        renderer.MaxIters += 10;
     } else if (mea.Button == MouseButtons.Right) {
-        zoom -= 1;
-        maxIters -= 10;
+        renderer.Zoom -= 1;
+        renderer.MaxIters -= 10;
     }
     Render();
 }
@@ -64,17 +53,7 @@ label.MouseClick += OnClick;
 Render();
 Application.Run(screen);
 
-filename = System.IO.Directory.GetCurrentDirectory() + "..\\..\\..\\..\\data.mandel";
-Renderer.ExportMandelbrot(filename, xCenter, yCenter, zoom, maxIters, renderMode);
+filename = Directory.GetCurrentDirectory() + "..\\..\\..\\..\\data.mandel";
+renderer.ExportMandelbrot(filename);
 
-Bitmap renderImage = new Bitmap(512, 512);
-label.Image = Renderer.RenderMandelbrot(  
-    xCenter,
-    yCenter,
-    zoom,
-    maxIters,
-    renderMode,
-    renderImage
-);
-
-renderImage.Save(System.IO.Directory.GetCurrentDirectory() + "..\\..\\..\\..\\render.png", ImageFormat.Png);
+label.Image = renderer.RenderMandelbrot();

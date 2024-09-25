@@ -1,9 +1,16 @@
-﻿using System.Text;
+﻿using System.Drawing.Imaging;
+using System.Text;
 
 namespace Mandelbrot;
 
-public static class Renderer {
-    static int IteratePoint(double zReal, double zImag, double cReal, double cImag, int maxIterations) {
+public class Renderer(int resolution, int maxIters, RenderMode renderMode, double xCenter = 0, double yCenter = 0, double zoom = 0, bool julia = false) {
+    public int MaxIters = maxIters;
+    public double XCenter = xCenter;
+    public double YCenter = yCenter;
+    public double Zoom = zoom;
+    readonly Bitmap img = new Bitmap(resolution, resolution);
+    
+    int IteratePoint(double zReal, double zImag, double cReal, double cImag) {
         int iterations = 0;
         
         // This condition is just Pythagoras without the square root, because those are slow
@@ -12,7 +19,7 @@ public static class Renderer {
             zImag = 2 * zReal * zImag + cImag;
             zReal = tempRe;
             iterations++;
-            if (iterations > maxIterations) {
+            if (iterations > MaxIters) {
                 return -1;
             }
         }
@@ -20,39 +27,37 @@ public static class Renderer {
         return iterations;
     }
     
-    static List<(int x, int y, int iters)> Worker(double xCenter, double yCenter, double zoom, double juliaX, double juliaY, int maxIters, int resolution, bool julia, int startX, int endX) {
-        Console.WriteLine(startX + "  " + endX);
-        List<(int x, int y, int iters)> res = [];
-        
-        double zoomExp = Math.Exp(-1.0 * zoom);
+    void Worker(double juliaX, double juliaY, int startX, int endX) {
+        double zoomExp = Math.Exp(-1.0 * Zoom);
         for (int x = startX; x < endX; x++) {
             for (int y = 0; y < resolution; y++) {
-                double pointX = zoomExp * (4.0 * x / resolution - 2.0) + xCenter;
-                double pointY = zoomExp * (4.0 * y / resolution - 2.0) + yCenter;
+                double pointX = zoomExp * (4.0 * x / resolution - 2.0) + XCenter;
+                double pointY = zoomExp * (4.0 * y / resolution - 2.0) + YCenter;
+                int iters;
                 if (!julia) {
-                    int iters = IteratePoint(0.0, 0.0, pointX, pointY, maxIters);
-                    res.Add((x, y, iters));
+                    iters = IteratePoint(0.0, 0.0, pointX, pointY);
                 } else {
-                    int iters = IteratePoint(pointX, pointY, juliaX, juliaY, maxIters);
-                    res.Add((x, y, iters));
+                    iters = IteratePoint(pointX, pointY, juliaX, juliaY);
                 }
+                
+                Color pointColor;
+                if (iters == -1) {
+                    pointColor = Color.Black;
+                } else {
+                    pointColor = renderMode.CalculateColor(iters, MaxIters);
+                }
+                // img.SetPixel(x, y, pointColor);
+                // todo fix this issue. Bitmap can't be accessed by multiple threads at a time.
             }
         }
-
-        return res;
     }
     
-    public static Bitmap RenderMandelbrot(double xCenter, double yCenter, double zoom, int maxIters, RenderMode renderMode, Bitmap img, double juliaX = 0, double juliaY = 0) {
-        var values = new List<List<(int x, int y, int iters)>>();
+    public Bitmap RenderMandelbrot(double juliaX = 0, double juliaY = 0) {
         List<Thread> threads = [];
         
-        int height = img.Height;
         int width = img.Width;
         for (int i = 0; i < Environment.ProcessorCount; i++) {
-            values.Add([]);
-                
             int endX;
-            
             if (i + 1 != Environment.ProcessorCount) {
                 endX = (i + 1) * (width / Environment.ProcessorCount);
             } else {
@@ -62,15 +67,9 @@ public static class Renderer {
             Thread thread = new Thread(
                 () =>
                 {
-                    values[i] = Worker(
-                        xCenter,
-                        yCenter,
-                        zoom,
+                    Worker(
                         juliaX,
                         juliaY,
-                        maxIters,
-                        height,
-                        renderMode.julia,
                         i * (width / Environment.ProcessorCount),
                         endX
                     );
@@ -83,21 +82,7 @@ public static class Renderer {
         foreach (Thread thread in threads) {
             thread.Join();
         }
-
-        foreach (var valueList in values) {
-            foreach (var pixel in valueList) {
-                Color pointColor;
-                if (pixel.iters == -1) {
-                    pointColor = Color.Black;
-                } else {
-                    pointColor = renderMode.CalculateColor(pixel.iters, maxIters);
-                }
-
-                // Console.WriteLine(pixel.x);
-                img.SetPixel(pixel.x, pixel.y, pointColor);
-            }
-        }
-
+        
         return img;
     }
     
@@ -105,17 +90,18 @@ public static class Renderer {
     /**
      * Exports the current render as a .mandel file.
      */
-    public static void ExportMandelbrot(string filename, double xCenter, double yCenter, double zoom, int maxIters, RenderMode renderMode) {
+    public void ExportMandelbrot(string filename) {
         using (FileStream stream = File.Open(filename, FileMode.Create)) {
             using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false)) {
                 
                 // Magic bytes
                 writer.Write("MANDEL");
 
-                writer.Write(xCenter);
-                writer.Write(yCenter);
-                writer.Write(zoom);
-                writer.Write(maxIters);
+                writer.Write(XCenter);
+                writer.Write(YCenter);
+                writer.Write(Zoom);
+                writer.Write(MaxIters);
+                writer.Write(julia);
 
                 writer.Write(new[] { renderMode.GetId() });
                 if (renderMode is Lerp lerp) {
@@ -157,9 +143,10 @@ public static class Renderer {
     /**
      * imports a given .mandel file and loads as the current render.
      */
-    public static (double, double, double, int, RenderMode?) ImportMandelbrot(string filename, bool importRenderMode) {
+    public static Renderer ImportMandelbrot(string filename, int resolution = 512) {
         double xCenter, yCenter, zoom;
         int maxIters;
+        bool julia;
         RenderMode renderMode;
 
         using (FileStream stream = File.Open(filename, FileMode.Open)) {
@@ -177,73 +164,74 @@ public static class Renderer {
                 yCenter = reader.ReadDouble();
                 zoom = reader.ReadDouble();
                 maxIters = reader.ReadInt32();
+                julia = reader.ReadBoolean();
+                
+                switch (reader.ReadByte()) {
+                    case (byte)RenderModeEnum.GRAYSCALE:
+                        renderMode = new Grayscale();
 
-                if (importRenderMode) {
-                    switch (reader.ReadByte()) {
-                        case (byte)RenderModeEnum.GRAYSCALE:
-                            renderMode = new Grayscale();
+                        break;
+                    case (byte)RenderModeEnum.HUE:
+                        renderMode = new Hue();
 
-                            break;
-                        case (byte)RenderModeEnum.HUE:
-                            renderMode = new Hue();
+                        break;
+                    case (byte)RenderModeEnum.LERP:
+                        renderMode = new Lerp(
+                            Color.FromArgb(
+                                reader.ReadByte(),
+                                reader.ReadByte(),
+                                reader.ReadByte()),
+                            Color.FromArgb(
+                                reader.ReadByte(),
+                                reader.ReadByte(),
+                                reader.ReadByte())
+                        );
 
-                            break;
-                        case (byte)RenderModeEnum.LERP:
-                            renderMode = new Lerp(
-                                Color.FromArgb(
-                                    reader.ReadByte(),
-                                    reader.ReadByte(),
-                                    reader.ReadByte()),
-                                Color.FromArgb(
-                                    reader.ReadByte(),
-                                    reader.ReadByte(),
-                                    reader.ReadByte())
+                        break;
+                    case (byte)RenderModeEnum.FLIP_FLOP:
+                        renderMode = new FlipFlop(
+                            Color.FromArgb(
+                                reader.ReadByte(),
+                                reader.ReadByte(),
+                                reader.ReadByte()),
+                            Color.FromArgb(
+                                reader.ReadByte(),
+                                reader.ReadByte(),
+                                reader.ReadByte()));
+
+                        break;
+                    case (byte)RenderModeEnum.TRIANGLE:
+                        int colorLength = reader.ReadInt32();
+                        int triangleSize = reader.ReadInt32();
+                        int repeat = reader.ReadInt32();
+                        var colors = new List<(Color, Color)>();
+
+                        for (int i = 0; i < colorLength; i++) {
+                            colors.Add(
+                                (Color.FromArgb(
+                                        reader.ReadByte(),
+                                        reader.ReadByte(),
+                                        reader.ReadByte()),
+                                    Color.FromArgb(
+                                        reader.ReadByte(),
+                                        reader.ReadByte(),
+                                        reader.ReadByte()))
                             );
+                        }
 
-                            break;
-                        case (byte)RenderModeEnum.FLIP_FLOP:
-                            renderMode = new FlipFlop(
-                                Color.FromArgb(
-                                    reader.ReadByte(),
-                                    reader.ReadByte(),
-                                    reader.ReadByte()),
-                                Color.FromArgb(
-                                    reader.ReadByte(),
-                                    reader.ReadByte(),
-                                    reader.ReadByte()));
+                        renderMode = new Triangle(colors, triangleSize, repeat);
 
-                            break;
-                        case (byte)RenderModeEnum.TRIANGLE:
-                            int colorLength = reader.ReadInt32();
-                            int triangleSize = reader.ReadInt32();
-                            int repeat = reader.ReadInt32();
-                            var colors = new List<(Color, Color)>();
-
-                            for (int i = 0; i < colorLength; i++) {
-                                colors.Add(
-                                    (Color.FromArgb(
-                                            reader.ReadByte(),
-                                            reader.ReadByte(),
-                                            reader.ReadByte()),
-                                        Color.FromArgb(
-                                            reader.ReadByte(),
-                                            reader.ReadByte(),
-                                            reader.ReadByte()))
-                                );
-                            }
-
-                            renderMode = new Triangle(colors, triangleSize, repeat);
-
-                            break;
-                        default:
-                            throw new Exception("Invalid input file. It might be corrupted.");
-                    }
-                } else {
-                    return (xCenter, yCenter, zoom, maxIters, null);
+                        break;
+                    default:
+                        throw new Exception("Invalid input file. It might be corrupted.");
                 }
             }
         }
         
-        return (xCenter, yCenter, zoom, maxIters, renderMode);
+        return new Renderer(resolution, maxIters, renderMode, xCenter, yCenter, zoom, julia);
+    }
+
+    public void SaveRenderedImage(string filename) {
+        img.Save(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\render.png", ImageFormat.Png);
     }
 }
