@@ -37,6 +37,10 @@ public class Grayscale : RenderMode
     }
 
     public bool Julia { get; set; }
+    
+    public override string ToString() {
+        return "Grayscale";
+    }
 }
 
 /**
@@ -46,19 +50,19 @@ public class Hue : RenderMode
 {
     public Color CalculateColor(int iterations, int maxIterations)
     {
-        var hue = iterations / (maxIterations * 1.0);
-        if (hue is >= 0 and < 1.0 / 6) // RED
-            return Color.FromArgb(255, (int)(hue * 1530.0), 0);
-        if (hue is >= 1.0 / 6 and < 2.0 / 6) // YELLOW
-            return Color.FromArgb(255 - (int)((hue - 1.0 / 6) * 1530.0), 255, 0);
-        if (hue is >= 2.0 / 6 and < 3.0 / 6) // GREEN
-            return Color.FromArgb(0, 255, (int)((hue - 2.0 / 6) * 1530.0));
-        if (hue is >= 3.0 / 6 and < 4.0 / 6) // CYAN
-            return Color.FromArgb(0, 255 - (int)((hue - 3.0 / 6) * 1530.0), 255);
-        if (hue is >= 4.0 / 6 and < 5.0 / 6) // BLUE
-            return Color.FromArgb((int)((hue - 4.0 / 6) * 1530.0), 0, 255);
-        if (hue is >= 5.0 / 6 and <= 1) // MAGENTA
-            return Color.FromArgb(255, 0, 255 - (int)((hue - 5.0 / 6) * 1530.0));
+        int hue = 8*iterations % 1530;
+        if (hue is >= 0 and < 256) // RED
+            return Color.FromArgb(255, hue, 0);
+        if (hue is >= 256 and < 512) // YELLOW
+            return Color.FromArgb(255 - (hue-256), 255, 0);
+        if (hue is >= 512 and < 768) // GREEN
+            return Color.FromArgb(0, 255, hue-512);
+        if (hue is >= 768 and < 1024) // CYAN
+            return Color.FromArgb(0, 255 - (hue-768), 255);
+        if (hue is >= 1024 and < 1280) // BLUE
+            return Color.FromArgb(hue-1024, 0, 255);
+        if (hue is >= 1280 and < 1530) // MAGENTA
+            return Color.FromArgb(255, 0, 255 - (hue-1280));
         throw new Exception("Unreachable code reached.");
     }
 
@@ -68,6 +72,10 @@ public class Hue : RenderMode
     }
 
     public bool Julia { get; set; }
+    
+    public override string ToString() {
+        return "Hue";
+    }
 }
 
 /**
@@ -80,7 +88,7 @@ public class Lerp(Color startColor, Color endColor) : RenderMode
 
     public Color CalculateColor(int iterations, int maxIterations)
     {
-        var t = iterations / (maxIterations * 1.0);
+        double t = iterations / (maxIterations * 1.0);
 
         return Color.FromArgb(
             (int)((1 - t) * Start.R + t * End.R),
@@ -98,11 +106,15 @@ public class Lerp(Color startColor, Color endColor) : RenderMode
 
     public static Lerp GenerateRandom()
     {
-        var rnd = new Random();
+        Random rnd = new Random();
         return new Lerp(
             Color.FromArgb(255, rnd.Next(0, 256), rnd.Next(0, 256), rnd.Next(0, 256)),
             Color.FromArgb(255, rnd.Next(0, 256), rnd.Next(0, 256), rnd.Next(0, 256))
         );
+    }
+    
+    public override string ToString() {
+        return "Lerp";
     }
 }
 
@@ -130,11 +142,15 @@ public class FlipFlop(Color colorA, Color colorB) : RenderMode
 
     public static FlipFlop GenerateRandom()
     {
-        var rnd = new Random();
+        Random rnd = new Random();
         return new FlipFlop(
             Color.FromArgb(255, rnd.Next(0, 256), rnd.Next(0, 256), rnd.Next(0, 256)),
             Color.FromArgb(255, rnd.Next(0, 256), rnd.Next(0, 256), rnd.Next(0, 256))
         );
+    }
+    
+    public override string ToString() {
+        return "Flipflop";
     }
 }
 
@@ -149,7 +165,7 @@ public class Triangle(List<(Color start, Color end)> colorList, int size, int n)
 
     public Color CalculateColor(int iterations, int maxIterations)
     {
-        var index = iterations / (Repeat * TriangleSize) % Colors.Count;
+        int index = iterations / (Repeat * TriangleSize) % Colors.Count;
 
         int startR = Colors[index].start.R;
         int startG = Colors[index].start.G;
@@ -158,8 +174,8 @@ public class Triangle(List<(Color start, Color end)> colorList, int size, int n)
         int endG = Colors[index].end.G;
         int endB = Colors[index].end.B;
 
-        var level = iterations % TriangleSize;
-        var t = level / (TriangleSize - 1.0);
+        int level = iterations % TriangleSize;
+        double t = level / (TriangleSize - 1.0);
 
         return Color.FromArgb(
             (int)((1 - t) * startR + t * endR),
@@ -177,15 +193,14 @@ public class Triangle(List<(Color start, Color end)> colorList, int size, int n)
 
     public static Triangle GenerateRandom()
     {
-        var rnd = new Random();
-        var colorLength = rnd.Next(2, 5);
-        List<(Color, Color)> colors =  []
-        ;
+        Random rnd = new Random();
+        int colorLength = rnd.Next(2, 5);
+        List<(Color, Color)> colors = [];
 
         for (var i = 0; i < colorLength; i++)
-            colors.Add(
-                (Color.FromArgb(255, rnd.Next(0, 256), rnd.Next(0, 256), rnd.Next(0, 256)),
-                    Color.FromArgb(255, rnd.Next(0, 256), rnd.Next(0, 256), rnd.Next(0, 256)))
+            colors.Add((
+                Color.FromArgb(255, rnd.Next(0, 256), rnd.Next(0, 256), rnd.Next(0, 256)),
+                Color.FromArgb(255, rnd.Next(0, 256), rnd.Next(0, 256), rnd.Next(0, 256)))
             );
 
         return new Triangle(
@@ -215,5 +230,9 @@ public class Triangle(List<(Color start, Color end)> colorList, int size, int n)
             },
             10,
             1);
+    }
+    
+    public override string ToString() {
+        return "Triangle";
     }
 }

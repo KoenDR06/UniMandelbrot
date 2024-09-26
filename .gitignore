@@ -1,5 +1,5 @@
 bin/
 obj/
-data.mandel
+render_*
 render.png
 mandelbrot.png

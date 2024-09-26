@@ -1,22 +1,22 @@
 using System.Diagnostics;
-using Accessibility;
 using Mandelbrot;
 
 // Settings
-var rendering = false;
-var resolution = 800;
-var maxIterations = 256;
-var renderer = new Renderer(resolution, maxIterations, Triangle.RAINBOW_TRIANGLE(), cores:16);
+bool rendering = false;
+int resolution = 800;
+int maxIterations = 256;
+Renderer renderer = new Renderer(resolution, maxIterations, Triangle.GenerateRandom(), Environment.ProcessorCount);
 
-var screen = new Form
+Form screen = new Form
 {
     ClientSize = new Size(resolution + 250, resolution),
-    Text = "Mandelbrot"
+    Text = "Mandelbrot",
+    FormBorderStyle = FormBorderStyle.FixedSingle
     // BACKLOG: add icon?
 };
 
 // Control panel
-var controlPanel = new FlowLayoutPanel
+FlowLayoutPanel controlPanel = new FlowLayoutPanel
 {
     Location = new Point(0, 0),
     FlowDirection = FlowDirection.TopDown,
@@ -27,7 +27,7 @@ var controlPanel = new FlowLayoutPanel
     Width = 250
 };
 
-var title = new Label()
+Label title = new Label()
 {
     Text = "Mandelbrot",
     Font = new Font("OCR-A Extended", 16, FontStyle.Bold),
@@ -35,19 +35,19 @@ var title = new Label()
     ForeColor = Color.White
 };
 
-var zoomLabel = new LabeledInput("Zoom:");
+LabeledInput zoomLabel = new LabeledInput("Zoom:");
 zoomLabel.InputField.Text = renderer.Zoom.ToString();
 
-var iterationLabel = new LabeledInput("Max iterations:");
+LabeledInput iterationLabel = new LabeledInput("Max iterations:");
 iterationLabel.InputField.Text = renderer.MaxIterations.ToString();
 
-var horTransLabel = new LabeledInput("Horizontal translation:");
+LabeledInput horTransLabel = new LabeledInput("Horizontal translation:");
 horTransLabel.InputField.Text = renderer.XCenter.ToString();
 
-var verTransLabel = new LabeledInput("Vertical translation:");
+LabeledInput verTransLabel = new LabeledInput("Vertical translation:");
 verTransLabel.InputField.Text = renderer.YCenter.ToString();
 
-var renderButton = new Button()
+Button renderButton = new Button()
 {
     Text = "Render",
     BackColor = Color.White,
@@ -55,7 +55,7 @@ var renderButton = new Button()
     AutoSize = true
 };
 
-var resetButton = new Button()
+Button resetButton = new Button()
 {
     Text = "Reset",
     BackColor = Color.White,
@@ -63,26 +63,52 @@ var resetButton = new Button()
     AutoSize = true
 };
 
-var exportButton = new Button()
+Button exportImageButton = new Button()
 {
-    Text = "Export",
+    Text = "Export Image",
     BackColor = Color.White,
     ForeColor = Color.FromArgb(34, 76, 91),
     AutoSize = true
 };
+
+Button exportRenderButton = new Button()
+{
+    Text = "Export Render",
+    BackColor = Color.White,
+    ForeColor = Color.FromArgb(34, 76, 91),
+    AutoSize = true
+};
+
+Button importRenderButton = new Button()
+{
+    Text = "Import Render",
+    BackColor = Color.White,
+    ForeColor = Color.FromArgb(34, 76, 91),
+    AutoSize = true
+};
+
+ComboBox renderModeField = new ComboBox();
+renderModeField.Items.Add("Grayscale");
+renderModeField.Items.Add("Hue");
+renderModeField.Items.Add("Lerp");
+renderModeField.Items.Add("Flipflop");
+renderModeField.Items.Add("Triangle");
+renderModeField.Text = renderer.RenderMode.ToString();
 
 controlPanel.Controls.Add(title);
 controlPanel.Controls.Add(zoomLabel);
 controlPanel.Controls.Add(iterationLabel);
 controlPanel.Controls.Add(horTransLabel);
 controlPanel.Controls.Add(verTransLabel);
+controlPanel.Controls.Add(renderModeField);
 controlPanel.Controls.Add(renderButton);
 controlPanel.Controls.Add(resetButton);
-controlPanel.Controls.Add(exportButton);
-//
+controlPanel.Controls.Add(exportImageButton);
+controlPanel.Controls.Add(exportRenderButton);
+controlPanel.Controls.Add(importRenderButton);
 
 
-var mandelbrotImage = new Label
+Label mandelbrotImage = new Label
 {
     Location = new Point(250, 0),
     Size = new Size(resolution, resolution)
@@ -96,23 +122,12 @@ async void Render()
 {
     rendering = true;
 
-    var stopWatch = new Stopwatch();
+    Stopwatch stopWatch = new Stopwatch();
     stopWatch.Start();
 
-    try
-    {
-        renderer.Zoom = int.Parse(zoomLabel.InputField.Text);
-        renderer.MaxIterations = int.Parse(iterationLabel.InputField.Text);
-        renderer.XCenter = double.Parse(horTransLabel.InputField.Text);
-        renderer.YCenter = double.Parse(verTransLabel.InputField.Text);
-    }
-    catch
-    {
-        MessageBox.Show("Please make sure all the inputs are valid.");
-    }
-
-
-    exportButton.Enabled = false;
+    importRenderButton.Enabled = false;
+    exportImageButton.Enabled = false;
+    exportRenderButton.Enabled = false;
     resetButton.Enabled = false;
     renderButton.Enabled = false;
     renderButton.Text = "Rendering...";
@@ -123,7 +138,9 @@ async void Render()
         screen.Refresh();
     });
     
-    exportButton.Enabled = true;
+    importRenderButton.Enabled = true;
+    exportRenderButton.Enabled = true;
+    exportImageButton.Enabled = true;
     resetButton.Enabled = true;
     renderButton.Enabled = true;
     renderButton.Text = "Render";
@@ -132,6 +149,61 @@ async void Render()
     Console.WriteLine(stopWatch.Elapsed);
     
     rendering = false;
+}
+
+void UpdateRenderParams() {
+    try
+    {
+        renderer.Zoom = double.Parse(zoomLabel.InputField.Text);
+        renderer.MaxIterations = int.Parse(iterationLabel.InputField.Text);
+        renderer.XCenter = double.Parse(horTransLabel.InputField.Text);
+        renderer.YCenter = double.Parse(verTransLabel.InputField.Text);
+
+        if (renderer.RenderMode.ToString() != renderModeField.Text) {
+            switch (renderModeField.Text) {
+                case "Grayscale":
+                    renderer.RenderMode = new Grayscale();
+                    break;
+
+                case "Hue":
+                    renderer.RenderMode = new Hue();
+                    break;
+
+                case "Flipflop":
+                    renderer.RenderMode = FlipFlop.GenerateRandom();
+                    break;
+
+                case "Lerp":
+                    renderer.RenderMode = Lerp.GenerateRandom();
+                    break;
+
+                case "Triangle":
+                    renderer.RenderMode = Triangle.RAINBOW_TRIANGLE();
+                    break;
+
+                default:
+                    throw new Exception("Unreachable code reached.");
+            }
+        }
+    }
+    catch
+    {
+        MessageBox.Show("Please make sure all the inputs are valid.");
+    }
+}
+
+void UpdateUIFields() {
+    try {
+        zoomLabel.InputField.Text = renderer.Zoom.ToString();
+        iterationLabel.InputField.Text = renderer.MaxIterations.ToString();
+        horTransLabel.InputField.Text = renderer.XCenter.ToString();
+        verTransLabel.InputField.Text = renderer.YCenter.ToString();
+        renderModeField.Text = renderer.RenderMode.ToString();
+    }
+    catch
+    {
+        MessageBox.Show("Please make sure all the inputs are valid.");
+    }
 }
 
 void OnScroll(object? o, MouseEventArgs mea)
@@ -197,22 +269,50 @@ void Reset(object? o, EventArgs mea)
 
 mandelbrotImage.MouseWheel += OnScroll;
 mandelbrotImage.MouseClick += OnClick;
-renderButton.Click += (_, _) => { Render(); };
-resetButton.Click += Reset;
-exportButton.Click += (_, _) =>
+renderButton.Click += (_, _) =>
 {
-    renderer.SaveRenderedImage();
+    UpdateRenderParams();
+    Render(); 
+};
+resetButton.Click += Reset;
+exportImageButton.Click += (_, _) => 
+{
+    DateTime date = DateTime.Now;
+
+    string year = date.Year.ToString().PadLeft(4, '0');
+    string month = date.Month.ToString().PadLeft(2, '0');
+    string day = date.Day.ToString().PadLeft(2, '0');
+    string hour = date.Hour.ToString().PadLeft(2, '0');
+    string minute = date.Minute.ToString().PadLeft(2, '0');
+    string second = date.Second.ToString().PadLeft(2, '0');
+    
+    string filename = Directory.GetCurrentDirectory() + $"..\\..\\..\\..\\render_{year}-{month}-{day}-{hour}{minute}{second}.png";
+    renderer.SaveRenderedImage(filename);
+};
+
+exportRenderButton.Click += (_, _) =>
+{
+    DateTime date = DateTime.Now;
+
+    string year = date.Year.ToString().PadLeft(4, '0');
+    string month = date.Month.ToString().PadLeft(2, '0');
+    string day = date.Day.ToString().PadLeft(2, '0');
+    string hour = date.Hour.ToString().PadLeft(2, '0');
+    string minute = date.Minute.ToString().PadLeft(2, '0');
+    string second = date.Second.ToString().PadLeft(2, '0');
+    
+    string filename = Directory.GetCurrentDirectory() + $"..\\..\\..\\..\\render_{year}-{month}-{day}-{hour}{minute}{second}.mandel";
+    renderer.ExportMandelbrot(filename);
+};
+
+
+importRenderButton.Click += (_, _) => 
+{
+    string filename = Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\infinite_spiral.mandel";
+    renderer.ImportMandelbrot(filename);
+    Render();
+    UpdateUIFields();
 };
 
 Render();
 Application.Run(screen);
-
-// BACKLOG: wat doet dit hier?
-//
-// filename = Directory.GetCurrentDirectory() + "..\\..\\..\\..\\data.mandel";
-// renderer.ExportMandelbrot(filename);
-//
-// // mandelbrotImage.Image = renderer.RenderMandelbrot();
-//
-//
-// renderer.SaveRenderedImage(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\render.png");
