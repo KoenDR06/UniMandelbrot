@@ -128,19 +128,19 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, doubl
 
                 writer.Write(new[] { renderMode.GetId() });
                 if (renderMode is Lerp lerp) {
-                    writer.Write(BitConverter.GetBytes((int)lerp.Start.R)[0]);
-                    writer.Write(BitConverter.GetBytes((int)lerp.Start.G)[0]);
-                    writer.Write(BitConverter.GetBytes((int)lerp.Start.B)[0]);
-                    writer.Write(BitConverter.GetBytes((int)lerp.End.R)[0]);
-                    writer.Write(BitConverter.GetBytes((int)lerp.End.G)[0]);
-                    writer.Write(BitConverter.GetBytes((int)lerp.End.B)[0]);
+                    foreach (var colour in new [] { lerp.Start, lerp.End })
+                    {
+                        writer.Write(BitConverter.GetBytes((int)colour.R)[0]);
+                        writer.Write(BitConverter.GetBytes((int)colour.G)[0]);
+                        writer.Write(BitConverter.GetBytes((int)colour.B)[0]);
+                    }
                 } else if (renderMode is FlipFlop flipFlop) {
-                    writer.Write(BitConverter.GetBytes((int)flipFlop.A.R)[0]);
-                    writer.Write(BitConverter.GetBytes((int)flipFlop.A.G)[0]);
-                    writer.Write(BitConverter.GetBytes((int)flipFlop.A.B)[0]);
-                    writer.Write(BitConverter.GetBytes((int)flipFlop.B.R)[0]);
-                    writer.Write(BitConverter.GetBytes((int)flipFlop.B.G)[0]);
-                    writer.Write(BitConverter.GetBytes((int)flipFlop.B.B)[0]);
+                    foreach (var colour in new [] {flipFlop.A, flipFlop.B})
+                    {
+                        writer.Write(BitConverter.GetBytes((int)colour.R)[0]);
+                        writer.Write(BitConverter.GetBytes((int)colour.G)[0]);
+                        writer.Write(BitConverter.GetBytes((int)colour.B)[0]);
+                    }
                 } else if (renderMode is Triangle triangle) {
                     writer.Write(BitConverter.GetBytes(triangle.Colors.Count));
                     writer.Write(BitConverter.GetBytes(triangle.TriangleSize));
@@ -190,15 +190,15 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, doubl
                 julia = reader.ReadBoolean();
                 
                 switch (reader.ReadByte()) {
-                    case (byte)RenderModeEnum.GRAYSCALE:
+                    case (byte)RenderModeEnum.Grayscale:
                         renderMode = new Grayscale();
 
                         break;
-                    case (byte)RenderModeEnum.HUE:
+                    case (byte)RenderModeEnum.Hue:
                         renderMode = new Hue();
 
                         break;
-                    case (byte)RenderModeEnum.LERP:
+                    case (byte)RenderModeEnum.Lerp:
                         renderMode = new Lerp(
                             Color.FromArgb(
                                 reader.ReadByte(),
@@ -211,7 +211,7 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, doubl
                         );
 
                         break;
-                    case (byte)RenderModeEnum.FLIP_FLOP:
+                    case (byte)RenderModeEnum.FlipFlop:
                         renderMode = new FlipFlop(
                             Color.FromArgb(
                                 reader.ReadByte(),
@@ -223,7 +223,7 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, doubl
                                 reader.ReadByte()));
 
                         break;
-                    case (byte)RenderModeEnum.TRIANGLE:
+                    case (byte)RenderModeEnum.Triangle:
                         int colorLength = reader.ReadInt32();
                         int triangleSize = reader.ReadInt32();
                         int repeat = reader.ReadInt32();

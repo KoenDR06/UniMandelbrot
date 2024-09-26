@@ -8,8 +8,6 @@ public class LabeledInput : FlowLayoutPanel
     public LabeledInput(string label)
     {
         AutoSize = true;
-        // Padding = new Padding(0);
-        // Margin = new Padding(0);
         FlowDirection = FlowDirection.LeftToRight;
         Width = 250;
 
@@ -33,5 +31,11 @@ public class LabeledInput : FlowLayoutPanel
             BackColor = Color.Azure
         };
         Controls.Add(InputField);
-    }   
+    }
+
+    public sealed override bool AutoSize
+    {
+        get { return base.AutoSize; }
+        set { base.AutoSize = value; }
+    }
 }

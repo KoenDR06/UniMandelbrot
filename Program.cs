@@ -153,7 +153,7 @@ void Reset(object? o, EventArgs mea)
 
 mandelbrotImage.MouseWheel += OnScroll;
 mandelbrotImage.MouseClick += OnClick;
-renderButton.Click += (object? o, EventArgs mea) => { Render(); };
+renderButton.Click += (_, _) => { Render(); };
 resetButton.Click += Reset;
 
 Render();
