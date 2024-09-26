@@ -38,7 +38,7 @@ var zoomLabel = new LabeledInput("Zoom:");
 zoomLabel.InputField.Text = renderer.Zoom.ToString();
 
 var iterationLabel = new LabeledInput("Max iterations:");
-iterationLabel.InputField.Text = maxIterations.ToString();
+iterationLabel.InputField.Text = renderer.MaxIters.ToString();
 
 var horTransLabel = new LabeledInput("Horizontal translation:");
 horTransLabel.InputField.Text = renderer.XCenter.ToString();
