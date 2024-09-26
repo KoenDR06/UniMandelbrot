@@ -10,4 +10,13 @@ public static class Utils {
         
         return res;
     }
+
+    public static void WriteColorPair(BinaryWriter writer, Color a, Color b) {
+        writer.Write(BitConverter.GetBytes((int)a.R)[0]);
+        writer.Write(BitConverter.GetBytes((int)a.G)[0]);
+        writer.Write(BitConverter.GetBytes((int)a.B)[0]);
+        writer.Write(BitConverter.GetBytes((int)b.R)[0]);
+        writer.Write(BitConverter.GetBytes((int)b.G)[0]);
+        writer.Write(BitConverter.GetBytes((int)b.B)[0]);
+    }
 }
