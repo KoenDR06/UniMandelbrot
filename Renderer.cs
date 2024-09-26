@@ -157,12 +157,9 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, int c
                         Utils.WriteColorPair(writer, a, b);
                     }
                 }
-
                 writer.Flush();
             }
-
         }
-
     }
 
     /**
@@ -192,15 +189,15 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, int c
                 julia = reader.ReadBoolean();
                 
                 switch (reader.ReadByte()) {
-                    case (byte)RenderModeEnum.GRAYSCALE:
+                    case (byte)RenderModeEnum.Grayscale:
                         renderMode = new Grayscale();
                         break;
                     
-                    case (byte)RenderModeEnum.HUE:
+                    case (byte)RenderModeEnum.Hue:
                         renderMode = new Hue();
                         break;
                     
-                    case (byte)RenderModeEnum.LERP:
+                    case (byte)RenderModeEnum.Lerp:
                         renderMode = new Lerp(
                             Color.FromArgb(
                                 reader.ReadByte(),
@@ -213,7 +210,7 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, int c
                         );
                         break;
                     
-                    case (byte)RenderModeEnum.FLIP_FLOP:
+                    case (byte)RenderModeEnum.FlipFlop:
                         renderMode = new FlipFlop(
                             Color.FromArgb(
                                 reader.ReadByte(),
@@ -226,7 +223,7 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, int c
                         );
                         break;
                     
-                    case (byte)RenderModeEnum.TRIANGLE:
+                    case (byte)RenderModeEnum.Triangle:
                         int colorLength = reader.ReadInt32();
                         int triangleSize = reader.ReadInt32();
                         int repeat = reader.ReadInt32();
