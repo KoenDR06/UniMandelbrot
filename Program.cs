@@ -4,6 +4,7 @@ using Mandelbrot;
 // Settings
 var resolution = 800;
 var maxIterations = 256;
+var renderer = new Renderer(resolution, maxIterations, Triangle.RAINBOW_TRIANGLE());
 
 
 var screen = new Form
@@ -21,8 +22,52 @@ var controlPanel = new FlowLayoutPanel
     Dock = DockStyle.Left,
     Margin = new Padding(0),
     Padding = new Padding(0),
-    BackColor = Color.Red
+    BackColor = Color.FromArgb(34, 76, 91),
+    Width = 250
 };
+
+var title = new Label()
+{
+    Text = "Mandelbrot",
+    Font = new Font("OCR-A Extended", 16, FontStyle.Bold),
+    AutoSize = true,
+    ForeColor = Color.White
+};
+
+var zoomLabel = new LabeledInput("Zoom:");
+zoomLabel.InputField.Text = renderer.Zoom.ToString();
+
+var resolutionLabel = new LabeledInput("Resolution:");
+resolutionLabel.InputField.Text = resolution.ToString();
+
+var horTransLabel = new LabeledInput("Horizontal translation:");
+horTransLabel.InputField.Text = renderer.XCenter.ToString();
+
+var verTransLabel = new LabeledInput("Vertical translation:");
+verTransLabel.InputField.Text = renderer.YCenter.ToString();
+
+var renderButton = new Button()
+{
+    Text = "Render",
+    BackColor = Color.White,
+    ForeColor = Color.FromArgb(34, 76, 91)
+};
+
+var resetButton = new Button()
+{
+    Text = "Reset",
+    BackColor = Color.White,
+    ForeColor = Color.FromArgb(34, 76, 91)
+};
+
+controlPanel.Controls.Add(title);
+controlPanel.Controls.Add(zoomLabel);
+controlPanel.Controls.Add(resolutionLabel);
+controlPanel.Controls.Add(horTransLabel);
+controlPanel.Controls.Add(verTransLabel);
+controlPanel.Controls.Add(renderButton);
+controlPanel.Controls.Add(resetButton);
+//
 
 
 var mandelbrotImage = new Label
@@ -31,16 +76,17 @@ var mandelbrotImage = new Label
     Size = new Size(resolution, resolution)
 };
 
+screen.Controls.Add(controlPanel);
 screen.Controls.Add(mandelbrotImage);
 
-var filename = Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\infinite_spiral.mandel";
-var renderer = new Renderer(resolution, maxIterations, Triangle.RAINBOW_TRIANGLE());
-
+// BACKLOG: de stopwatch ff weghalen? was vgm op zich alleen debugging?
 void Render()
 {
     var stopWatch = new Stopwatch();
     stopWatch.Start();
+
     mandelbrotImage.Image = renderer.RenderMandelbrot();
+
     stopWatch.Stop();
     Console.WriteLine(stopWatch.Elapsed);
 }
@@ -77,9 +123,26 @@ void OnClick(object? o, MouseEventArgs mea)
     Render();
 }
 
+void Reset(object? o, EventArgs mea)
+{
+    renderer.XCenter = 0;
+    horTransLabel.InputField.Text = "0";
+    
+    renderer.YCenter = 0;
+    verTransLabel.InputField.Text = "0";
+    
+    renderer.Zoom = 0;
+    zoomLabel.InputField.Text = "0";
+
+    renderer.MaxIters = 256;
+    
+    Render();
+}
 
 mandelbrotImage.MouseWheel += OnScroll;
 mandelbrotImage.MouseClick += OnClick;
+renderButton.Click += (object? o, EventArgs mea) => { Render(); };
+resetButton.Click += Reset;
 
 Render();
 Application.Run(screen);
