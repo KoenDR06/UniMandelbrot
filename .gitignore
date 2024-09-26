@@ -2,3 +2,4 @@ bin/
 obj/
 data.mandel
 render.png
+mandelbrot.png

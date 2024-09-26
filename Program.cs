@@ -1,11 +1,12 @@
 using System.Diagnostics;
+using Accessibility;
 using Mandelbrot;
 
 // Settings
+var rendering = false;
 var resolution = 800;
 var maxIterations = 256;
-var renderer = new Renderer(resolution, maxIterations, Triangle.RAINBOW_TRIANGLE());
-
+var renderer = new Renderer(resolution, maxIterations, Triangle.RAINBOW_TRIANGLE(), cores:16);
 
 var screen = new Form
 {
@@ -38,7 +39,7 @@ var zoomLabel = new LabeledInput("Zoom:");
 zoomLabel.InputField.Text = renderer.Zoom.ToString();
 
 var iterationLabel = new LabeledInput("Max iterations:");
-iterationLabel.InputField.Text = renderer.MaxIters.ToString();
+iterationLabel.InputField.Text = renderer.MaxIterations.ToString();
 
 var horTransLabel = new LabeledInput("Horizontal translation:");
 horTransLabel.InputField.Text = renderer.XCenter.ToString();
@@ -50,14 +51,24 @@ var renderButton = new Button()
 {
     Text = "Render",
     BackColor = Color.White,
-    ForeColor = Color.FromArgb(34, 76, 91)
+    ForeColor = Color.FromArgb(34, 76, 91),
+    AutoSize = true
 };
 
 var resetButton = new Button()
 {
     Text = "Reset",
     BackColor = Color.White,
-    ForeColor = Color.FromArgb(34, 76, 91)
+    ForeColor = Color.FromArgb(34, 76, 91),
+    AutoSize = true
+};
+
+var exportButton = new Button()
+{
+    Text = "Export",
+    BackColor = Color.White,
+    ForeColor = Color.FromArgb(34, 76, 91),
+    AutoSize = true
 };
 
 controlPanel.Controls.Add(title);
@@ -67,6 +78,7 @@ controlPanel.Controls.Add(horTransLabel);
 controlPanel.Controls.Add(verTransLabel);
 controlPanel.Controls.Add(renderButton);
 controlPanel.Controls.Add(resetButton);
+controlPanel.Controls.Add(exportButton);
 //
 
 
@@ -80,55 +92,85 @@ screen.Controls.Add(controlPanel);
 screen.Controls.Add(mandelbrotImage);
 
 // BACKLOG: de stopwatch ff weghalen? was vgm op zich alleen debugging?
-void Render()
+async void Render()
 {
+    rendering = true;
+
     var stopWatch = new Stopwatch();
     stopWatch.Start();
 
-    renderer.Zoom = int.Parse(zoomLabel.InputField.Text);
-    renderer.MaxIters = int.Parse(iterationLabel.InputField.Text);
-    renderer.XCenter = double.Parse(horTransLabel.InputField.Text);
-    renderer.YCenter = double.Parse(verTransLabel.InputField.Text);
+    try
+    {
+        renderer.Zoom = int.Parse(zoomLabel.InputField.Text);
+        renderer.MaxIterations = int.Parse(iterationLabel.InputField.Text);
+        renderer.XCenter = double.Parse(horTransLabel.InputField.Text);
+        renderer.YCenter = double.Parse(verTransLabel.InputField.Text);
+    }
+    catch
+    {
+        MessageBox.Show("Please make sure all the inputs are valid.");
+    }
+
+
+    exportButton.Enabled = false;
+    resetButton.Enabled = false;
+    renderButton.Enabled = false;
+    renderButton.Text = "Rendering...";
     
-    mandelbrotImage.Image = renderer.RenderMandelbrot();
+    await Task.Run(async () =>
+    {
+        mandelbrotImage.Image = await renderer.RenderMandelbrot();
+        screen.Refresh();
+    });
+    
+    exportButton.Enabled = true;
+    resetButton.Enabled = true;
+    renderButton.Enabled = true;
+    renderButton.Text = "Render";
 
     stopWatch.Stop();
     Console.WriteLine(stopWatch.Elapsed);
+    
+    rendering = false;
 }
 
 void OnScroll(object? o, MouseEventArgs mea)
 {
+    if (rendering) return;
+    
     if (mea.Delta >= 1200)
-        renderer.MaxIters *= 2;
+        renderer.MaxIterations *= 2;
     else if (mea.Delta <= -1200)
-        renderer.MaxIters /= 2;
-    else renderer.MaxIters += mea.Delta / 12;
+        renderer.MaxIterations /= 2;
+    else renderer.MaxIterations += mea.Delta / 12;
 
-    if (renderer.MaxIters <= 1) renderer.MaxIters = 1;
+    if (renderer.MaxIterations <= 1) renderer.MaxIterations = 1;
 
-    iterationLabel.InputField.Text = renderer.MaxIters.ToString();
+    iterationLabel.InputField.Text = renderer.MaxIterations.ToString();
     
     Render();
 }
 
 void OnClick(object? o, MouseEventArgs mea)
 {
+    if (rendering) return;
+
     renderer.XCenter = Math.Exp(-1.0 * renderer.Zoom) * (4.0 * mea.X / resolution - 2.0) + renderer.XCenter;
     renderer.YCenter = Math.Exp(-1.0 * renderer.Zoom) * (4.0 * mea.Y / resolution - 2.0) + renderer.YCenter;
 
     if (mea.Button == MouseButtons.Left)
     {
         renderer.Zoom += 1;
-        renderer.MaxIters += 10;
+        renderer.MaxIterations += 10;
     }
     else if (mea.Button == MouseButtons.Right)
     {
         renderer.Zoom -= 1;
-        renderer.MaxIters -= 10;
+        renderer.MaxIterations -= 10;
     }
 
     zoomLabel.InputField.Text = renderer.Zoom.ToString();
-    iterationLabel.InputField.Text = renderer.MaxIters.ToString();
+    iterationLabel.InputField.Text = renderer.MaxIterations.ToString();
     horTransLabel.InputField.Text = renderer.XCenter.ToString();
     verTransLabel.InputField.Text = renderer.YCenter.ToString();
 
@@ -137,6 +179,8 @@ void OnClick(object? o, MouseEventArgs mea)
 
 void Reset(object? o, EventArgs mea)
 {
+    if (rendering) return;
+
     renderer.XCenter = 0;
     horTransLabel.InputField.Text = "0";
     
@@ -146,7 +190,7 @@ void Reset(object? o, EventArgs mea)
     renderer.Zoom = 0;
     zoomLabel.InputField.Text = "0";
 
-    renderer.MaxIters = 256;
+    renderer.MaxIterations = 256;
     
     Render();
 }
@@ -155,6 +199,10 @@ mandelbrotImage.MouseWheel += OnScroll;
 mandelbrotImage.MouseClick += OnClick;
 renderButton.Click += (_, _) => { Render(); };
 resetButton.Click += Reset;
+exportButton.Click += (_, _) =>
+{
+    renderer.SaveRenderedImage();
+};
 
 Render();
 Application.Run(screen);
