@@ -59,8 +59,8 @@ public class Renderer(int resolution, int maxIters, RenderMode renderMode, int c
                 }
 
                 // start code from: https://stackoverflow.com/questions/1563038/fast-work-with-bitmaps-in-c-sharp
-                int bytesPerPixel = Image.GetPixelFormatSize(_img.PixelFormat) / 8;
-                int pixelLocation = y * _imgData.Stride + bytesPerPixel * x;
+                // Multiply by three because image has three bytes per pixel
+                int pixelLocation = y * _imgData.Stride + 3 * x;
                 _pixelData[pixelLocation] = pointColor.B;
                 _pixelData[pixelLocation+1] = pointColor.R;
                 _pixelData[pixelLocation+2] = pointColor.G;
