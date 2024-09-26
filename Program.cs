@@ -37,8 +37,8 @@ var title = new Label()
 var zoomLabel = new LabeledInput("Zoom:");
 zoomLabel.InputField.Text = renderer.Zoom.ToString();
 
-var resolutionLabel = new LabeledInput("Resolution:");
-resolutionLabel.InputField.Text = resolution.ToString();
+var iterationLabel = new LabeledInput("Max iterations:");
+iterationLabel.InputField.Text = maxIterations.ToString();
 
 var horTransLabel = new LabeledInput("Horizontal translation:");
 horTransLabel.InputField.Text = renderer.XCenter.ToString();
@@ -62,7 +62,7 @@ var resetButton = new Button()
 
 controlPanel.Controls.Add(title);
 controlPanel.Controls.Add(zoomLabel);
-controlPanel.Controls.Add(resolutionLabel);
+controlPanel.Controls.Add(iterationLabel);
 controlPanel.Controls.Add(horTransLabel);
 controlPanel.Controls.Add(verTransLabel);
 controlPanel.Controls.Add(renderButton);
@@ -85,6 +85,11 @@ void Render()
     var stopWatch = new Stopwatch();
     stopWatch.Start();
 
+    renderer.Zoom = int.Parse(zoomLabel.InputField.Text);
+    renderer.MaxIters = int.Parse(iterationLabel.InputField.Text);
+    renderer.XCenter = double.Parse(horTransLabel.InputField.Text);
+    renderer.YCenter = double.Parse(verTransLabel.InputField.Text);
+    
     mandelbrotImage.Image = renderer.RenderMandelbrot();
 
     stopWatch.Stop();
@@ -101,6 +106,8 @@ void OnScroll(object? o, MouseEventArgs mea)
 
     if (renderer.MaxIters <= 1) renderer.MaxIters = 1;
 
+    iterationLabel.InputField.Text = renderer.MaxIters.ToString();
+    
     Render();
 }
 
@@ -119,6 +126,11 @@ void OnClick(object? o, MouseEventArgs mea)
         renderer.Zoom -= 1;
         renderer.MaxIters -= 10;
     }
+
+    zoomLabel.InputField.Text = renderer.Zoom.ToString();
+    iterationLabel.InputField.Text = renderer.MaxIters.ToString();
+    horTransLabel.InputField.Text = renderer.XCenter.ToString();
+    verTransLabel.InputField.Text = renderer.YCenter.ToString();
 
     Render();
 }
