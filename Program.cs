@@ -100,19 +100,15 @@ renderModeField.Items.Add("Flipflop");
 renderModeField.Items.Add("Triangle");
 renderModeField.Text = renderer.RenderMode.ToString();
 
-controlPanel.Controls.Add(title);
-controlPanel.Controls.Add(zoomLabel);
-controlPanel.Controls.Add(iterationLabel);
-controlPanel.Controls.Add(horTransLabel);
-controlPanel.Controls.Add(verTransLabel);
-controlPanel.Controls.Add(renderModeField);
-controlPanel.Controls.Add(renderButton);
-controlPanel.Controls.Add(resetButton);
-controlPanel.Controls.Add(coreSlider);
-controlPanel.Controls.Add(exportImageButton);
-controlPanel.Controls.Add(exportRenderButton);
-controlPanel.Controls.Add(importRenderButton);
 
+Control[] controls = new Control[]
+{
+    title, zoomLabel, iterationLabel, horTransLabel, verTransLabel, renderModeField, renderButton, resetButton,
+    coreSlider, exportImageButton, exportRenderButton, importRenderButton
+};
+
+foreach (var control in controls)
+    controlPanel.Controls.Add(control);
 
 Label mandelbrotImage = new Label
 {
