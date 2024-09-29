@@ -7,12 +7,13 @@ int resolution = 800;
 int maxIterations = 256;
 Renderer renderer = new Renderer(resolution, maxIterations, Triangle.GenerateRandom(), Environment.ProcessorCount);
 
+// BACKLOG: Hardcoding the path to the icon is probably a bad idea
 Form screen = new Form
 {
     ClientSize = new Size(resolution + 250, resolution),
     Text = "Mandelbrot",
-    FormBorderStyle = FormBorderStyle.FixedSingle
-    // BACKLOG: add icon?
+    FormBorderStyle = FormBorderStyle.FixedSingle,
+    Icon = new Icon("../../../icon.ico")
 };
 
 // Control panel
