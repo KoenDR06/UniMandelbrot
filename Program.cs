@@ -86,6 +86,11 @@ Button importRenderButton = new Button()
     ForeColor = Color.FromArgb(34, 76, 91),
     AutoSize = true
 };
+var coreSlider = new TrackBar()
+{
+    Minimum = 1,
+    Maximum = Environment.ProcessorCount
+};
 
 ComboBox renderModeField = new ComboBox();
 renderModeField.Items.Add("Grayscale");
@@ -103,6 +108,7 @@ controlPanel.Controls.Add(verTransLabel);
 controlPanel.Controls.Add(renderModeField);
 controlPanel.Controls.Add(renderButton);
 controlPanel.Controls.Add(resetButton);
+controlPanel.Controls.Add(coreSlider);
 controlPanel.Controls.Add(exportImageButton);
 controlPanel.Controls.Add(exportRenderButton);
 controlPanel.Controls.Add(importRenderButton);
@@ -158,6 +164,7 @@ void UpdateRenderParams() {
         renderer.MaxIterations = int.Parse(iterationLabel.InputField.Text);
         renderer.XCenter = double.Parse(horTransLabel.InputField.Text);
         renderer.YCenter = double.Parse(verTransLabel.InputField.Text);
+        renderer.Cores = coreSlider.Value;
 
         if (renderer.RenderMode.ToString() != renderModeField.Text) {
             switch (renderModeField.Text) {
@@ -199,6 +206,7 @@ void UpdateUIFields() {
         horTransLabel.InputField.Text = renderer.XCenter.ToString();
         verTransLabel.InputField.Text = renderer.YCenter.ToString();
         renderModeField.Text = renderer.RenderMode.ToString();
+        coreSlider.Text = renderer.Cores.ToString();
     }
     catch
     {
@@ -275,6 +283,7 @@ renderButton.Click += (_, _) =>
     Render(); 
 };
 resetButton.Click += Reset;
+
 exportImageButton.Click += (_, _) => 
 {
     DateTime date = DateTime.Now;
@@ -304,7 +313,6 @@ exportRenderButton.Click += (_, _) =>
     string filename = Directory.GetCurrentDirectory() + $"..\\..\\..\\..\\render_{year}-{month}-{day}-{hour}{minute}{second}.mandel";
     renderer.ExportMandelbrot(filename);
 };
-
 
 importRenderButton.Click += (_, _) => 
 {
