@@ -47,6 +47,22 @@ horTransLabel.InputField.Text = renderer.XCenter.ToString();
 LabeledInput verTransLabel = new LabeledInput("Vertical translation:");
 verTransLabel.InputField.Text = renderer.YCenter.ToString();
 
+ComboBox renderModeField = new ComboBox();
+renderModeField.Items.Add("Grayscale");
+renderModeField.Items.Add("Hue");
+renderModeField.Items.Add("Lerp");
+renderModeField.Items.Add("Flipflop");
+renderModeField.Items.Add("Triangle");
+renderModeField.Text = renderer.RenderMode.ToString();
+
+Button randomiseRenderModeButton = new Button()
+{
+    Text = "Random Kleur",
+    BackColor = Color.White,
+    ForeColor = Color.FromArgb(34, 76, 91),
+    AutoSize = true
+};
+
 Button renderButton = new Button()
 {
     Text = "Render",
@@ -87,20 +103,13 @@ Button importRenderButton = new Button()
     AutoSize = true
 };
 
-ComboBox renderModeField = new ComboBox();
-renderModeField.Items.Add("Grayscale");
-renderModeField.Items.Add("Hue");
-renderModeField.Items.Add("Lerp");
-renderModeField.Items.Add("Flipflop");
-renderModeField.Items.Add("Triangle");
-renderModeField.Text = renderer.RenderMode.ToString();
-
 controlPanel.Controls.Add(title);
 controlPanel.Controls.Add(zoomLabel);
 controlPanel.Controls.Add(iterationLabel);
 controlPanel.Controls.Add(horTransLabel);
 controlPanel.Controls.Add(verTransLabel);
 controlPanel.Controls.Add(renderModeField);
+controlPanel.Controls.Add(randomiseRenderModeButton);
 controlPanel.Controls.Add(renderButton);
 controlPanel.Controls.Add(resetButton);
 controlPanel.Controls.Add(exportImageButton);
@@ -310,6 +319,19 @@ importRenderButton.Click += (_, _) =>
 {
     string filename = Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\infinite_spiral.mandel";
     renderer.ImportMandelbrot(filename);
+    Render();
+    UpdateUIFields();
+};
+
+randomiseRenderModeButton.Click += (_, _) => 
+{
+    if (renderer.RenderMode is Lerp) {
+        renderer.RenderMode = Lerp.GenerateRandom();
+    } else if (renderer.RenderMode is Triangle) {
+        renderer.RenderMode = Triangle.GenerateRandom();
+    } else if (renderer.RenderMode is FlipFlop) {
+        renderer.RenderMode = FlipFlop.GenerateRandom();
+    }
     Render();
     UpdateUIFields();
 };
