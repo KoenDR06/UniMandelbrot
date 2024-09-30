@@ -65,6 +65,7 @@ Button renderButton = new Button()
     ForeColor = Color.FromArgb(34, 76, 91),
     AutoSize = true
 };
+screen.AcceptButton = renderButton;
 
 Button resetButton = new Button()
 {
