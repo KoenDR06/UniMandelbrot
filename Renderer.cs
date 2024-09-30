@@ -5,7 +5,6 @@ namespace Mandelbrot;
 
 public class Renderer
 {
-    public int Resolution;
     public int MaxIterations;
     public RenderMode RenderMode;
     public int Cores;
@@ -13,15 +12,18 @@ public class Renderer
     public double YCenter;
     public double Zoom;
     public bool Julia;
+    public double JuliaX;
+    public double JuliaY;
 
     Bitmap _image;
     byte[] _pixelData;
     BitmapData _imageData;
+    int _resolution;
     
-    public Renderer(int resolution, int maxIterations, RenderMode renderMode, int cores = 1, double xCenter = 0,
+    public Renderer(int resolution, int maxIterations, RenderMode renderMode, double juliaX = 0, double juliaY = 0, int cores = 1, double xCenter = 0,
         double yCenter = 0, double zoom = 0, bool julia = false)
     {
-        Resolution = resolution;
+        _resolution = resolution;
         MaxIterations = maxIterations;
         RenderMode = renderMode;
         Cores = cores;
@@ -29,8 +31,10 @@ public class Renderer
         YCenter = yCenter;
         Zoom = zoom;
         Julia = julia;
+        JuliaX = juliaX;
+        JuliaY = juliaY;
 
-        _image = new Bitmap(this.Resolution, this.Resolution, PixelFormat.Format24bppRgb);
+        _image = new Bitmap(_resolution, _resolution, PixelFormat.Format24bppRgb);
     }
 
     int IteratePoint(double zReal, double zImag, double cReal, double cImag)
@@ -52,15 +56,15 @@ public class Renderer
 
     private void Worker(double juliaX, double juliaY, int startX, int endX)
     {
-        double zoomExp = Math.Exp(-1.0 * Zoom);
+        double zoomExp = Math.Exp(-Zoom);
     
         for (int x = startX; x < endX; x++)
         {
-            for (int y = 0; y < Resolution; y++)
+            for (int y = 0; y < _resolution; y++)
             {
                 // Pixel-space => mandelbrot-space
-                double pointX = zoomExp * (4.0 * x / Resolution - 2.0) + XCenter;
-                double pointY = zoomExp * (4.0 * y / Resolution - 2.0) + YCenter;
+                double pointX = zoomExp * (4.0 * x / _resolution - 2.0) + XCenter;
+                double pointY = zoomExp * (4.0 * y / _resolution - 2.0) + YCenter;
     
                 int iterations = Julia
                     ? IteratePoint(pointX, pointY, juliaX, juliaY)
@@ -80,10 +84,10 @@ public class Renderer
         }
     }
     
-    public Task<Bitmap> RenderMandelbrot(double juliaX = 0, double juliaY = 0)
+    public Task<Bitmap> RenderMandelbrot()
     {
         // Resolution is updated, required for high-res exports
-        _image = new Bitmap(this.Resolution, this.Resolution, PixelFormat.Format24bppRgb);
+        _image = new Bitmap(_resolution, _resolution, PixelFormat.Format24bppRgb);
 
         // Next section copied from: https://stackoverflow.com/questions/1563038/fast-work-with-bitmaps-in-c-sharp
         _imageData = _image.LockBits(new Rectangle(0, 0, _image.Width, _image.Height), ImageLockMode.ReadWrite, _image.PixelFormat);
@@ -98,7 +102,7 @@ public class Renderer
             // Rounding can cause threads to not reach the end, so the last thread cleans up
             int endX = (i + 1 == Cores) ? _image.Width : (i + 1) * (_image.Width / Cores);
 
-            Thread thread = new Thread(() => Worker(juliaX, juliaY, i * (_image.Width / Cores), endX));
+            Thread thread = new Thread(() => Worker(JuliaX, JuliaY, i * (_image.Width / Cores), endX));
             thread.Start();
             
             threads.Add(thread);
@@ -114,6 +118,13 @@ public class Renderer
 
         return Task.FromResult(_image);
     }
+    
+    public void SetJuliaCoords(MouseEventArgs mea) {
+        double zoomExp = Math.Exp(-Zoom);
+        JuliaX = zoomExp * (4.0 * mea.X / _resolution - 2.0) + XCenter;
+        JuliaY = zoomExp * (4.0 * mea.Y / _resolution - 2.0) + YCenter;
+    }
+    
     
     // Exporting the settings instead of bytes can cause _slight_ differences due to rounding
     // hence the custom file
@@ -242,14 +253,14 @@ public class Renderer
     public async void SaveRenderedImage(string filename)
     {
         int oldMaxIterations = MaxIterations;
-        Resolution *= 2;
+        _resolution *= 2;
         MaxIterations = 4096;
         
         // BACKLOG: For some reason the image only appears after closing the program
         Bitmap render = await RenderMandelbrot();
         render.Save(filename, ImageFormat.Png);
         
-        Resolution /= 2;
+        _resolution /= 2;
         MaxIterations = oldMaxIterations;
     }
 }

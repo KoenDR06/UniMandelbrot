@@ -112,8 +112,13 @@ ComboBox renderModeField = new ComboBox()
     Text = renderer.RenderMode.ToString()
 };
 
+CheckBox juliaCheckBox = new CheckBox
+{
+    Checked = renderer.Julia
+};
+
 Control[] controls = [
-    title, zoomLabel, iterationLabel, horTransLabel, verTransLabel, renderModeField, randomiseRenderModeButton, renderButton, resetButton,
+    title, zoomLabel, iterationLabel, horTransLabel, verTransLabel, renderModeField, randomiseRenderModeButton, juliaCheckBox, renderButton, resetButton,
     coreSlider, exportImageButton, exportRenderButton, importRenderButton
 ];
 
@@ -254,6 +259,10 @@ void OnClick(object? o, MouseEventArgs mea)
         renderer.Zoom -= 1;
         renderer.MaxIterations -= 10;
     }
+    else if (mea.Button == MouseButtons.Middle && !renderer.Julia)
+    {
+        renderer.SetJuliaCoords(mea);
+    }
 
     zoomLabel.InputField.Text = renderer.Zoom.ToString();
     iterationLabel.InputField.Text = renderer.MaxIterations.ToString();
@@ -366,6 +375,12 @@ renderModeField.TextChanged += (_, _) =>
         default:
             throw new Exception("Unreachable code reached.");
     }
+};
+
+juliaCheckBox.Click += (_, _) =>
+{
+    renderer.Julia = juliaCheckBox.Checked;
+    Render();
 };
 
 Render();
