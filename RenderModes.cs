@@ -113,6 +113,14 @@ public class Lerp(Color startColor, Color endColor) : RenderMode
         );
     }
     
+    public static Lerp Default()
+    {
+        return new Lerp(
+            Color.FromArgb(255, 012, 042, 232),
+            Color.FromArgb(255, 255, 000, 230)
+        );
+    }
+    
     public override string ToString() {
         return "Lerp";
     }
@@ -146,6 +154,14 @@ public class FlipFlop(Color colorA, Color colorB) : RenderMode
         return new FlipFlop(
             Color.FromArgb(255, rnd.Next(0, 256), rnd.Next(0, 256), rnd.Next(0, 256)),
             Color.FromArgb(255, rnd.Next(0, 256), rnd.Next(0, 256), rnd.Next(0, 256))
+        );
+    }
+    
+    public static FlipFlop Default()
+    {
+        return new FlipFlop(
+            Color.FromArgb(255, 255, 255, 255),
+            Color.FromArgb(255, 000, 000, 000)
         );
     }
     
@@ -210,7 +226,7 @@ public class Triangle(List<(Color start, Color end)> colorList, int size, int n)
         );
     }
 
-    public static Triangle RAINBOW_TRIANGLE()
+    public static Triangle Default()
     {
         return new Triangle(
             new List<(Color, Color)>

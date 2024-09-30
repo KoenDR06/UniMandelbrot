@@ -6,7 +6,7 @@ using Mandelbrot;
 bool rendering = false;
 int resolution = 800;
 int maxIterations = 256;
-Renderer renderer = new Renderer(resolution, maxIterations, Triangle.GenerateRandom(), Environment.ProcessorCount);
+Renderer renderer = new Renderer(resolution, maxIterations, new Hue(), Environment.ProcessorCount);
 
 // BACKLOG: Hardcoding the path to the icon is probably a bad idea
 Form screen = new Form
@@ -97,7 +97,8 @@ Button importRenderButton = new Button()
     ForeColor = Color.FromArgb(34, 76, 91),
     AutoSize = true
 };
-var coreSlider = new TrackBar()
+
+TrackBar coreSlider = new TrackBar()
 {
     Minimum = 1,
     Maximum = Environment.ProcessorCount,
@@ -115,7 +116,7 @@ Control[] controls = [
     coreSlider, exportImageButton, exportRenderButton, importRenderButton
 ];
 
-foreach (var control in controls)
+foreach (Control control in controls)
     controlPanel.Controls.Add(control);
 
 Label mandelbrotImage = new Label
@@ -181,15 +182,15 @@ void UpdateRenderParams() {
                     break;
 
                 case "FlipFlop":
-                    renderer.RenderMode = FlipFlop.GenerateRandom();
+                    renderer.RenderMode = FlipFlop.Default();
                     break;
 
                 case "Lerp":
-                    renderer.RenderMode = Lerp.GenerateRandom();
+                    renderer.RenderMode = Lerp.Default();
                     break;
 
                 case "Triangle":
-                    renderer.RenderMode = Triangle.RAINBOW_TRIANGLE();
+                    renderer.RenderMode = Triangle.Default();
                     break;
 
                 default:
@@ -345,16 +346,24 @@ randomiseRenderModeButton.Click += (_, _) =>
 
 renderModeField.TextChanged += (_, _) =>
 {
-    if (renderModeField.Text == "Lerp") {
-        renderer.RenderMode = Lerp.GenerateRandom();
-    } else if (renderModeField.Text == "Triangle") {
-        renderer.RenderMode = Triangle.GenerateRandom();
-    } else if (renderModeField.Text == "FlipFlop") {
-        renderer.RenderMode = FlipFlop.GenerateRandom();
-    } else if (renderModeField.Text == "Grayscale") {
-        renderer.RenderMode = new Grayscale();
-    } else if (renderModeField.Text == "Hue") {
-        renderer.RenderMode = new Hue();
+    switch (renderModeField.Text) {
+        case "Grayscale":
+            renderer.RenderMode = new Grayscale();
+            break;
+        case "Hue":
+            renderer.RenderMode = new Hue();
+            break;
+        case "FlipFlop":
+            renderer.RenderMode = FlipFlop.Default();
+            break;
+        case "Lerp":
+            renderer.RenderMode = Lerp.Default();
+            break;
+        case "Triangle":
+            renderer.RenderMode = Triangle.Default();
+            break;
+        default:
+            throw new Exception("Unreachable code reached.");
     }
 };
 
