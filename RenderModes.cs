@@ -150,7 +150,7 @@ public class FlipFlop(Color colorA, Color colorB) : RenderMode
     }
     
     public override string ToString() {
-        return "Flipflop";
+        return "FlipFlop";
     }
 }
 

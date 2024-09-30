@@ -115,9 +115,14 @@ public class Renderer
         return Task.FromResult(_image);
     }
     
-    public void ExportMandelbrot(string filename) {
-        using (FileStream stream = File.Open(filename, FileMode.Create)) {
-            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false)) {
+    // Exporting the settings instead of bytes can cause _slight_ differences due to rounding
+    // hence the custom file
+    public void ExportMandelbrot(string filename)
+    {
+        using (var stream = File.Open(filename, FileMode.Create))
+        {
+            using (var writer = new BinaryWriter(stream, Encoding.UTF8, false))
+            {
                 // Magic bytes
                 writer.Write("MANDEL");
 
@@ -126,53 +131,59 @@ public class Renderer
                 writer.Write(Zoom);
                 writer.Write(MaxIterations);
                 writer.Write(Julia);
-                
+
                 writer.Write(RenderMode.GetId());
-                if (RenderMode is Lerp lerp) {
+                if (RenderMode is Lerp lerp)
+                {
                     Utils.WriteColorPair(writer, lerp.Start, lerp.End);
-                } else if (RenderMode is FlipFlop flipFlop) {
+                }
+                else if (RenderMode is FlipFlop flipFlop)
+                {
                     Utils.WriteColorPair(writer, flipFlop.A, flipFlop.B);
-                } else if (RenderMode is Triangle triangle) {
+                }
+                else if (RenderMode is Triangle triangle)
+                {
                     writer.Write(BitConverter.GetBytes(triangle.Colors.Count));
                     writer.Write(BitConverter.GetBytes(triangle.TriangleSize));
                     writer.Write(BitConverter.GetBytes(triangle.Repeat));
 
-                    foreach ((Color a, Color b) in triangle.Colors) {
-                        Utils.WriteColorPair(writer, a, b);
-                    }
+                    foreach ((var a, var b) in triangle.Colors) Utils.WriteColorPair(writer, a, b);
                 }
+
                 writer.Flush();
             }
         }
     }
-    
-    public void ImportMandelbrot(string filename) {
-        using (FileStream stream = File.Open(filename, FileMode.Open)) {
-            using (BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, false)) {
+
+    public void ImportMandelbrot(string filename)
+    {
+        using (var stream = File.Open(filename, FileMode.Open))
+        {
+            using (var reader = new BinaryReader(stream, Encoding.UTF8, false))
+            {
                 // For some reason the byte 0x06 is added to the beginning of the file, even though I never tell it
                 // to write it, so I have to read it too.
                 reader.ReadByte();
-                
-                string magicBytes = Utils.GetStringFromBytes(reader.ReadBytes(6));
-                if (magicBytes != "MANDEL") {
-                    throw new Exception("Invalid file format.");
-                }
+
+                var magicBytes = Utils.GetStringFromBytes(reader.ReadBytes(6));
+                if (magicBytes != "MANDEL") throw new Exception("Invalid file format.");
 
                 XCenter = reader.ReadDouble();
                 YCenter = reader.ReadDouble();
                 Zoom = reader.ReadDouble();
                 MaxIterations = reader.ReadInt32();
                 Julia = reader.ReadBoolean();
-                
-                switch (reader.ReadByte()) {
+
+                switch (reader.ReadByte())
+                {
                     case (byte)RenderModeEnum.Grayscale:
                         RenderMode = new Grayscale();
                         break;
-                    
+
                     case (byte)RenderModeEnum.Hue:
                         RenderMode = new Hue();
                         break;
-                    
+
                     case (byte)RenderModeEnum.Lerp:
                         RenderMode = new Lerp(
                             Color.FromArgb(
@@ -185,7 +196,7 @@ public class Renderer
                                 reader.ReadByte())
                         );
                         break;
-                    
+
                     case (byte)RenderModeEnum.FlipFlop:
                         RenderMode = new FlipFlop(
                             Color.FromArgb(
@@ -198,29 +209,28 @@ public class Renderer
                                 reader.ReadByte())
                         );
                         break;
-                    
+
                     case (byte)RenderModeEnum.Triangle:
-                        int colorLength = reader.ReadInt32();
-                        int triangleSize = reader.ReadInt32();
-                        int repeat = reader.ReadInt32();
+                        var colorLength = reader.ReadInt32();
+                        var triangleSize = reader.ReadInt32();
+                        var repeat = reader.ReadInt32();
                         var colors = new List<(Color, Color)>();
 
-                        for (int i = 0; i < colorLength; i++) {
+                        for (var i = 0; i < colorLength; i++)
                             colors.Add((
-                                Color.FromArgb(
-                                    reader.ReadByte(),
-                                    reader.ReadByte(),
-                                    reader.ReadByte()),
-                                Color.FromArgb(
-                                    reader.ReadByte(),
-                                    reader.ReadByte(),
-                                    reader.ReadByte())
+                                    Color.FromArgb(
+                                        reader.ReadByte(),
+                                        reader.ReadByte(),
+                                        reader.ReadByte()),
+                                    Color.FromArgb(
+                                        reader.ReadByte(),
+                                        reader.ReadByte(),
+                                        reader.ReadByte())
                                 )
                             );
-                        }
                         RenderMode = new Triangle(colors, triangleSize, repeat);
                         break;
-                    
+
                     default:
                         throw new Exception("Failed to read ID of input file, it might be corrupted.");
                 }

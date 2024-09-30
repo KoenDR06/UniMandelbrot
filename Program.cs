@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Accessibility;
 using Mandelbrot;
 
 // Settings
@@ -7,12 +8,13 @@ int resolution = 800;
 int maxIterations = 256;
 Renderer renderer = new Renderer(resolution, maxIterations, Triangle.GenerateRandom(), Environment.ProcessorCount);
 
+// BACKLOG: Hardcoding the path to the icon is probably a bad idea
 Form screen = new Form
 {
     ClientSize = new Size(resolution + 250, resolution),
     Text = "Mandelbrot",
-    FormBorderStyle = FormBorderStyle.FixedSingle
-    // BACKLOG: add icon?
+    FormBorderStyle = FormBorderStyle.FixedSingle,
+    Icon = new Icon("../../../icon.ico")
 };
 
 // Control panel
@@ -46,14 +48,6 @@ horTransLabel.InputField.Text = renderer.XCenter.ToString();
 
 LabeledInput verTransLabel = new LabeledInput("Vertical translation:");
 verTransLabel.InputField.Text = renderer.YCenter.ToString();
-
-ComboBox renderModeField = new ComboBox();
-renderModeField.Items.Add("Grayscale");
-renderModeField.Items.Add("Hue");
-renderModeField.Items.Add("Lerp");
-renderModeField.Items.Add("Flipflop");
-renderModeField.Items.Add("Triangle");
-renderModeField.Text = renderer.RenderMode.ToString();
 
 Button randomiseRenderModeButton = new Button()
 {
@@ -102,20 +96,26 @@ Button importRenderButton = new Button()
     ForeColor = Color.FromArgb(34, 76, 91),
     AutoSize = true
 };
+var coreSlider = new TrackBar()
+{
+    Minimum = 1,
+    Maximum = Environment.ProcessorCount,
+    Value = Environment.ProcessorCount / 2
+};
 
-controlPanel.Controls.Add(title);
-controlPanel.Controls.Add(zoomLabel);
-controlPanel.Controls.Add(iterationLabel);
-controlPanel.Controls.Add(horTransLabel);
-controlPanel.Controls.Add(verTransLabel);
-controlPanel.Controls.Add(renderModeField);
-controlPanel.Controls.Add(randomiseRenderModeButton);
-controlPanel.Controls.Add(renderButton);
-controlPanel.Controls.Add(resetButton);
-controlPanel.Controls.Add(exportImageButton);
-controlPanel.Controls.Add(exportRenderButton);
-controlPanel.Controls.Add(importRenderButton);
+ComboBox renderModeField = new ComboBox()
+{
+    Items = { "Grayscale", "Hue", "Lerp", "FlipFlop", "Triangle" },
+    Text = renderer.RenderMode.ToString()
+};
 
+Control[] controls = [
+    title, zoomLabel, iterationLabel, horTransLabel, verTransLabel, renderModeField, randomiseRenderModeButton, renderButton, resetButton,
+    coreSlider, exportImageButton, exportRenderButton, importRenderButton
+];
+
+foreach (var control in controls)
+    controlPanel.Controls.Add(control);
 
 Label mandelbrotImage = new Label
 {
@@ -167,6 +167,7 @@ void UpdateRenderParams() {
         renderer.MaxIterations = int.Parse(iterationLabel.InputField.Text);
         renderer.XCenter = double.Parse(horTransLabel.InputField.Text);
         renderer.YCenter = double.Parse(verTransLabel.InputField.Text);
+        renderer.Cores = coreSlider.Value;
 
         if (renderer.RenderMode.ToString() != renderModeField.Text) {
             switch (renderModeField.Text) {
@@ -178,7 +179,7 @@ void UpdateRenderParams() {
                     renderer.RenderMode = new Hue();
                     break;
 
-                case "Flipflop":
+                case "FlipFlop":
                     renderer.RenderMode = FlipFlop.GenerateRandom();
                     break;
 
@@ -208,6 +209,7 @@ void UpdateUIFields() {
         horTransLabel.InputField.Text = renderer.XCenter.ToString();
         verTransLabel.InputField.Text = renderer.YCenter.ToString();
         renderModeField.Text = renderer.RenderMode.ToString();
+        coreSlider.Text = renderer.Cores.ToString();
     }
     catch
     {
@@ -284,6 +286,7 @@ renderButton.Click += (_, _) =>
     Render(); 
 };
 resetButton.Click += Reset;
+
 exportImageButton.Click += (_, _) => 
 {
     DateTime date = DateTime.Now;
@@ -314,7 +317,6 @@ exportRenderButton.Click += (_, _) =>
     renderer.ExportMandelbrot(filename);
 };
 
-
 importRenderButton.Click += (_, _) => 
 {
     string filename = Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\infinite_spiral.mandel";
@@ -331,9 +333,28 @@ randomiseRenderModeButton.Click += (_, _) =>
         renderer.RenderMode = Triangle.GenerateRandom();
     } else if (renderer.RenderMode is FlipFlop) {
         renderer.RenderMode = FlipFlop.GenerateRandom();
+    } else if (renderer.RenderMode is Grayscale) {
+        renderer.RenderMode = new Grayscale();
+    } else if (renderer.RenderMode is Hue) {
+        renderer.RenderMode = new Hue();
     }
     Render();
     UpdateUIFields();
+};
+
+renderModeField.TextChanged += (_, _) =>
+{
+    if (renderModeField.Text == "Lerp") {
+        renderer.RenderMode = Lerp.GenerateRandom();
+    } else if (renderModeField.Text == "Triangle") {
+        renderer.RenderMode = Triangle.GenerateRandom();
+    } else if (renderModeField.Text == "FlipFlop") {
+        renderer.RenderMode = FlipFlop.GenerateRandom();
+    } else if (renderModeField.Text == "Grayscale") {
+        renderer.RenderMode = new Grayscale();
+    } else if (renderModeField.Text == "Hue") {
+        renderer.RenderMode = new Hue();
+    }
 };
 
 Render();
