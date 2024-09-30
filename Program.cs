@@ -93,14 +93,11 @@ var coreSlider = new TrackBar()
     Maximum = Environment.ProcessorCount
 };
 
-ComboBox renderModeField = new ComboBox();
-renderModeField.Items.Add("Grayscale");
-renderModeField.Items.Add("Hue");
-renderModeField.Items.Add("Lerp");
-renderModeField.Items.Add("Flipflop");
-renderModeField.Items.Add("Triangle");
-renderModeField.Text = renderer.RenderMode.ToString();
-
+ComboBox renderModeField = new ComboBox()
+{
+    Items = { "Grayscale", "Hue", "Lerp", "FlipFlop", "Triangle" },
+    Text = renderer.RenderMode.ToString()
+};
 
 Control[] controls = new Control[]
 {
