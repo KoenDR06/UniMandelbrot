@@ -14,7 +14,8 @@ Form screen = new Form
     ClientSize = new Size(resolution + 250, resolution),
     Text = "Mandelbrot",
     FormBorderStyle = FormBorderStyle.FixedSingle,
-    Icon = new Icon("../../../icon.ico")
+    Icon = new Icon("../../../icon.ico"),
+    MaximizeBox = false
 };
 
 // Control panel
