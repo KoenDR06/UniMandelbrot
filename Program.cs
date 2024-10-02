@@ -127,14 +127,9 @@ ComboBox renderModeField = new ComboBox()
     Text = renderer.RenderMode.ToString()
 };
 
-CheckBox juliaCheckBox = new CheckBox
-{
-    Checked = renderer.Julia
-};
-
 Control[] controls = new Control[]
 {
-    title, zoomLabel, iterationLabel, horTransLabel, verTransLabel, renderModeField, randomiseRenderModeButton, juliaCheckBox, renderButton, resetButton,
+    title, zoomLabel, iterationLabel, horTransLabel, verTransLabel, renderModeField, randomiseRenderModeButton, renderButton, resetButton,
     coreSlider, exportImageButton, exportRenderButton, importRenderField
 };
     
@@ -374,12 +369,6 @@ renderModeField.TextChanged += (_, _) =>
             renderer.RenderMode = Triangle.Default();
             break;
     }
-};
-
-juliaCheckBox.Click += (_, _) =>
-{
-    renderer.Julia = juliaCheckBox.Checked;
-    Render();
 };
 
 importRenderField.TextChanged += (_, _) =>

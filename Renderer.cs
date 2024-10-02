@@ -11,17 +11,14 @@ public class Renderer
     public double XCenter;
     public double YCenter;
     public double Zoom;
-    public bool Julia;
-    public double JuliaX;
-    public double JuliaY;
 
     Bitmap _image;
     byte[] _pixelData;
     BitmapData _imageData;
     int _resolution;
     
-    public Renderer(int resolution, int maxIterations, RenderMode renderMode, double juliaX = 0, double juliaY = 0, int cores = 1, double xCenter = 0,
-        double yCenter = 0, double zoom = 0, bool julia = false)
+    public Renderer(int resolution, int maxIterations, RenderMode renderMode, int cores = 1, double xCenter = 0,
+        double yCenter = 0, double zoom = 0)
     {
         _resolution = resolution;
         MaxIterations = maxIterations;
@@ -30,9 +27,6 @@ public class Renderer
         XCenter = xCenter;
         YCenter = yCenter;
         Zoom = zoom;
-        Julia = julia;
-        JuliaX = juliaX;
-        JuliaY = juliaY;
 
         _image = new Bitmap(_resolution, _resolution, PixelFormat.Format24bppRgb);
     }
@@ -54,7 +48,7 @@ public class Renderer
         return iterations;
     }
 
-    void Worker(double juliaX, double juliaY, int startX, int endX)
+    void Worker(int startX, int endX)
     {
         double zoomExp = Math.Exp(-Zoom);
     
@@ -66,9 +60,7 @@ public class Renderer
                 double pointX = zoomExp * (4.0 * x / _resolution - 2.0) + XCenter;
                 double pointY = zoomExp * (4.0 * y / _resolution - 2.0) + YCenter;
     
-                int iterations = Julia
-                    ? IteratePoint(pointX, pointY, juliaX, juliaY)
-                    : IteratePoint(0.0, 0.0, pointX, pointY);
+                int iterations = IteratePoint(0.0, 0.0, pointX, pointY);
                 
                 Color pointColor = iterations == -1
                     ? Color.Black
@@ -106,7 +98,7 @@ public class Renderer
             else
                 endX = (i + 1) * (_image.Width / Cores);
 
-            Thread thread = new Thread(() => Worker(JuliaX, JuliaY, i * (_image.Width / Cores), endX));
+            Thread thread = new Thread(() => Worker(i * (_image.Width / Cores), endX));
             thread.Start();
             
             threads.Add(thread);
@@ -122,14 +114,7 @@ public class Renderer
 
         return Task.FromResult(_image);
     }
-    
-    public void SetJuliaCoords(MouseEventArgs mea) {
-        double zoomExp = Math.Exp(-Zoom);
-        JuliaX = zoomExp * (4.0 * mea.X / _resolution - 2.0) + XCenter;
-        JuliaY = zoomExp * (4.0 * mea.Y / _resolution - 2.0) + YCenter;
-    }
-    
-    
+
     // Exporting the settings instead of bytes can cause _slight_ differences due to rounding
     // hence the custom file
     public void ExportMandelbrot(string filename)
@@ -145,7 +130,6 @@ public class Renderer
                 writer.Write(YCenter);
                 writer.Write(Zoom);
                 writer.Write(MaxIterations);
-                writer.Write(Julia);
 
                 writer.Write(RenderMode.GetId());
                 if (RenderMode is Lerp lerp)
@@ -187,7 +171,6 @@ public class Renderer
                 YCenter = reader.ReadDouble();
                 Zoom = reader.ReadDouble();
                 MaxIterations = reader.ReadInt32();
-                Julia = reader.ReadBoolean();
 
                 switch (reader.ReadByte())
                 {
