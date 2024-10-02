@@ -1,5 +1,14 @@
 using System.Diagnostics;
+using System.Reflection;
 using Mandelbrot;
+
+// Import and use embedded resources
+Assembly currentAssembly = Assembly.GetExecutingAssembly();
+string[] resourceNames = currentAssembly.GetManifestResourceNames();
+
+Stream stream = currentAssembly.GetManifestResourceStream("Mandelbrot.icon.ico");
+Icon appIcon = new Icon(stream);
+
 
 // Settings
 bool rendering = false;
@@ -11,7 +20,7 @@ Form screen = new Form
 {
     ClientSize = new Size(resolution + 250, resolution),
     Text = "Mandelbrot",
-    Icon = new Icon("../../../icon.ico"),
+    Icon = appIcon,
     
     // Makes the window not resizable
     FormBorderStyle = FormBorderStyle.FixedSingle,
@@ -27,9 +36,10 @@ FlowLayoutPanel controlPanel = new FlowLayoutPanel
     Margin = new Padding(0),
     Padding = new Padding(0),
     BackColor = Color.FromArgb(34, 76, 91),
-    Width = 250
+    Width = 250,
+    Height = resolution
 };
-
+ 
 Label title = new Label()
 {
     Text = "Mandelbrot",
@@ -122,6 +132,12 @@ CheckBox juliaCheckBox = new CheckBox
     Checked = renderer.Julia
 };
 
+Control[] controls = new Control[]
+{
+    title, zoomLabel, iterationLabel, horTransLabel, verTransLabel, renderModeField, randomiseRenderModeButton, juliaCheckBox, renderButton, resetButton,
+    coreSlider, exportImageButton, exportRenderButton, importRenderField
+};
+    
 Label timeDisplay = new Label
 {
     Text = "",
@@ -131,11 +147,6 @@ Label timeDisplay = new Label
     ForeColor = Color.White,
     Font = new Font("OCR-A Extended", 13, FontStyle.Bold),
 };
-
-Control[] controls = [
-    title, zoomLabel, iterationLabel, horTransLabel, verTransLabel, renderModeField, randomiseRenderModeButton, juliaCheckBox, renderButton, resetButton,
-    coreSlider, exportImageButton, exportRenderButton, importRenderField
-];
 
 foreach (Control control in controls)
     controlPanel.Controls.Add(control);
