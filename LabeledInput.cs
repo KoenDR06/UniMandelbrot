@@ -1,41 +1,28 @@
 ﻿namespace Mandelbrot;
 
-public class LabeledInput : FlowLayoutPanel
+public class LabeledInput : Control
 {
     public Label TextLabel;
     public TextBox InputField;
-    
-    public LabeledInput(string label)
-    {
-        AutoSize = true;
-        FlowDirection = FlowDirection.LeftToRight;
-        Width = 250;
 
+    public LabeledInput(string label, string placeholderValue, Point location)
+    {
         TextLabel = new Label()
         {
             Text = label,
-            Anchor = AnchorStyles.Left,
             TextAlign = ContentAlignment.MiddleLeft,
             AutoSize = true,
-            Margin = new Padding(0),
-            Font = new Font("Consolas", 12, FontStyle.Bold),
-            ForeColor = Color.White
+            ForeColor = Color.White,
+            Location = location
         };
-
-        Controls.Add(TextLabel);
-
+        
+        location.Offset(250 - TextLabel.Width - location.X - 12, 0);
         InputField = new TextBox()
         {
-            Anchor = AnchorStyles.Right,
-            Margin = new Padding(0),
-            BackColor = Color.Azure
+            BackColor = Color.Azure,
+            Text = placeholderValue,
+            AutoSize = true,
+            Location = location
         };
-        Controls.Add(InputField);
-    }
-
-    public sealed override bool AutoSize
-    {
-        get { return base.AutoSize; }
-        set { base.AutoSize = value; }
     }
 }
