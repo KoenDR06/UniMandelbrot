@@ -177,32 +177,30 @@ void UpdateRenderParams() {
         renderer.XCenter = double.Parse(horTransLabel.InputField.Text);
         renderer.YCenter = double.Parse(verTransLabel.InputField.Text);
         renderer.Cores = coreSlider.Value;
+        
+        switch (renderModeField.Text) {
+            case "Grayscale":
+                renderer.RenderMode = new Grayscale();
+                break;
 
-        if (renderer.RenderMode.ToString() != renderModeField.Text) {
-            switch (renderModeField.Text) {
-                case "Grayscale":
-                    renderer.RenderMode = new Grayscale();
-                    break;
+            case "Hue":
+                renderer.RenderMode = new Hue();
+                break;
 
-                case "Hue":
-                    renderer.RenderMode = new Hue();
-                    break;
+            case "FlipFlop":
+                renderer.RenderMode = FlipFlop.Default();
+                break;
 
-                case "FlipFlop":
-                    renderer.RenderMode = FlipFlop.Default();
-                    break;
+            case "Lerp":
+                renderer.RenderMode = Lerp.Default();
+                break;
 
-                case "Lerp":
-                    renderer.RenderMode = Lerp.Default();
-                    break;
-
-                case "Triangle":
-                    renderer.RenderMode = Triangle.Default();
-                    break;
-                
-                default:
-                    throw new ArgumentException("Not a renderMode");
-            }
+            case "Triangle":
+                renderer.RenderMode = Triangle.Default();
+                break;
+            
+            default:
+                throw new ArgumentException("Not a renderMode");
         }
     }
     catch {
