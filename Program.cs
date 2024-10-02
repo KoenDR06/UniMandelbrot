@@ -175,7 +175,7 @@ async void Render()
         screen.Refresh();
     });
     stopWatch.Stop();
-    timeDisplay.Text = $"Rendering took: {stopWatch.Elapsed.Milliseconds} ms";
+    timeDisplay.Text = $"Rendering took: {60*stopWatch.Elapsed.Minutes+stopWatch.Elapsed.Seconds}.{stopWatch.Elapsed.Milliseconds} s";
     
     // Tell the GUI to accept input again
     exportRenderButton.Enabled = true;
