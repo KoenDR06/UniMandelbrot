@@ -1,12 +1,11 @@
 using System.Diagnostics;
-using Accessibility;
 using Mandelbrot;
 
 // Settings
 bool rendering = false;
 int resolution = 800;
 int maxIterations = 256;
-Renderer renderer = new Renderer(resolution, maxIterations, new Hue(), Environment.ProcessorCount);
+Renderer renderer = new Renderer(resolution, maxIterations, Triangle.GenerateRandom(), Environment.ProcessorCount);
 
 // BACKLOG: Hardcoding the path to the icon is probably a bad idea
 Form screen = new Form
@@ -91,13 +90,14 @@ Button exportRenderButton = new Button()
     AutoSize = true
 };
 
-Button importRenderButton = new Button()
+ComboBox importRenderField = new ComboBox()
 {
-    Text = "Import Render",
-    BackColor = Color.White,
-    ForeColor = Color.FromArgb(34, 76, 91),
-    AutoSize = true
+    Text = "Choose Render"
 };
+
+foreach (string filename in Directory.GetFiles(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets", "*.mandel")) {
+    importRenderField.Items.Add(filename.Split("\\").Last());
+}
 
 TrackBar coreSlider = new TrackBar()
 {
@@ -119,7 +119,7 @@ CheckBox juliaCheckBox = new CheckBox
 
 Control[] controls = [
     title, zoomLabel, iterationLabel, horTransLabel, verTransLabel, renderModeField, randomiseRenderModeButton, juliaCheckBox, renderButton, resetButton,
-    coreSlider, exportImageButton, exportRenderButton, importRenderButton
+    coreSlider, exportImageButton, exportRenderButton, importRenderField
 ];
 
 foreach (Control control in controls)
@@ -141,12 +141,12 @@ async void Render()
 
     Stopwatch stopWatch = new Stopwatch();
     stopWatch.Start();
-
-    importRenderButton.Enabled = false;
+    
     exportImageButton.Enabled = false;
     exportRenderButton.Enabled = false;
     resetButton.Enabled = false;
     renderButton.Enabled = false;
+    randomiseRenderModeButton.Enabled = false;
     renderButton.Text = "Rendering...";
     
     await Task.Run(async () =>
@@ -155,11 +155,11 @@ async void Render()
         screen.Refresh();
     });
     
-    importRenderButton.Enabled = true;
     exportRenderButton.Enabled = true;
     exportImageButton.Enabled = true;
     resetButton.Enabled = true;
     renderButton.Enabled = true;
+    randomiseRenderModeButton.Enabled = true;
     renderButton.Text = "Render";
 
     stopWatch.Stop();
@@ -173,6 +173,7 @@ void UpdateRenderParams() {
     {
         renderer.Zoom = double.Parse(zoomLabel.InputField.Text);
         renderer.MaxIterations = int.Parse(iterationLabel.InputField.Text);
+        if (renderer.MaxIterations <= 0) renderer.MaxIterations = 1;
         renderer.XCenter = double.Parse(horTransLabel.InputField.Text);
         renderer.YCenter = double.Parse(verTransLabel.InputField.Text);
         renderer.Cores = coreSlider.Value;
@@ -198,14 +199,20 @@ void UpdateRenderParams() {
                 case "Triangle":
                     renderer.RenderMode = Triangle.Default();
                     break;
-
+                
                 default:
-                    throw new Exception("Unreachable code reached.");
+                    throw new ArgumentException("Not a renderMode");
             }
         }
     }
-    catch
-    {
+    catch {
+        zoomLabel.InputField.Text = renderer.Zoom.ToString();
+        iterationLabel.InputField.Text = renderer.MaxIterations.ToString();
+        horTransLabel.InputField.Text = renderer.XCenter.ToString();
+        verTransLabel.InputField.Text = renderer.YCenter.ToString();
+        coreSlider.Value = renderer.Cores;
+        renderModeField.Text = renderer.RenderMode.ToString();
+        
         MessageBox.Show("Please make sure all the inputs are valid.");
     }
 }
@@ -325,16 +332,11 @@ exportRenderButton.Click += (_, _) =>
     string minute = date.Minute.ToString().PadLeft(2, '0');
     string second = date.Second.ToString().PadLeft(2, '0');
     
-    string filename = Directory.GetCurrentDirectory() + $"..\\..\\..\\..\\render_{year}-{month}-{day}-{hour}{minute}{second}.mandel";
-    renderer.ExportMandelbrot(filename);
-};
+    string filename = Directory.GetCurrentDirectory() + $"..\\..\\..\\..\\presets\\render_{year}-{month}-{day}-{hour}{minute}{second}.mandel";
 
-importRenderButton.Click += (_, _) => 
-{
-    string filename = Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\infinite_spiral.mandel";
-    renderer.ImportMandelbrot(filename);
-    Render();
-    UpdateUIFields();
+    importRenderField.Items.Add(filename.Split("\\").Last());
+    
+    renderer.ExportMandelbrot(filename);
 };
 
 randomiseRenderModeButton.Click += (_, _) => 
@@ -356,6 +358,8 @@ randomiseRenderModeButton.Click += (_, _) =>
 
 renderModeField.TextChanged += (_, _) =>
 {
+    if (rendering) return;
+    
     switch (renderModeField.Text) {
         case "Grayscale":
             renderer.RenderMode = new Grayscale();
@@ -372,14 +376,19 @@ renderModeField.TextChanged += (_, _) =>
         case "Triangle":
             renderer.RenderMode = Triangle.Default();
             break;
-        default:
-            throw new Exception("Unreachable code reached.");
     }
 };
 
 juliaCheckBox.Click += (_, _) =>
 {
     renderer.Julia = juliaCheckBox.Checked;
+    Render();
+};
+
+importRenderField.TextChanged += (_, _) =>
+{
+    renderer.ImportMandelbrot(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\" + importRenderField.Text);
+    UpdateUIFields();
     Render();
 };
 

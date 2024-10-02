@@ -54,7 +54,7 @@ public class Renderer
         return iterations;
     }
 
-    private void Worker(double juliaX, double juliaY, int startX, int endX)
+    void Worker(double juliaX, double juliaY, int startX, int endX)
     {
         double zoomExp = Math.Exp(-Zoom);
     
@@ -70,16 +70,16 @@ public class Renderer
                     ? IteratePoint(pointX, pointY, juliaX, juliaY)
                     : IteratePoint(0.0, 0.0, pointX, pointY);
                 
-                Color pointColour = iterations == -1
+                Color pointColor = iterations == -1
                     ? Color.Black
                     : RenderMode.CalculateColor(iterations, MaxIterations);
                 
                 // Code from: https://stackoverflow.com/questions/1563038/fast-work-with-bitmaps-in-c-sharp
                 // Multiply by three because image has three bytes per pixel
                 int pixelLocation = y * _imageData.Stride + 3 * x;
-                _pixelData[pixelLocation] = pointColour.B;
-                _pixelData[pixelLocation+1] = pointColour.G;
-                _pixelData[pixelLocation+2] = pointColour.R;
+                _pixelData[pixelLocation] = pointColor.B;
+                _pixelData[pixelLocation+1] = pointColor.G;
+                _pixelData[pixelLocation+2] = pointColor.R;
             }
         }
     }
@@ -100,7 +100,11 @@ public class Renderer
         for (int i = 0; i < Cores; i++)
         {
             // Rounding can cause threads to not reach the end, so the last thread cleans up
-            int endX = (i + 1 == Cores) ? _image.Width : (i + 1) * (_image.Width / Cores);
+            int endX;
+            if (i + 1 == Cores)
+                endX = _image.Width;
+            else
+                endX = (i + 1) * (_image.Width / Cores);
 
             Thread thread = new Thread(() => Worker(JuliaX, JuliaY, i * (_image.Width / Cores), endX));
             thread.Start();
