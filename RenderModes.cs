@@ -26,7 +26,8 @@ public class Grayscale : RenderMode
         return Color.FromArgb(
             (int)(iterations / (maxIterations / 255.0)),
             (int)(iterations / (maxIterations / 255.0)),
-            (int)(iterations / (maxIterations / 255.0)));
+            (int)(iterations / (maxIterations / 255.0))
+        );
     }
 
     public byte GetId()
@@ -46,18 +47,19 @@ public class Hue : RenderMode
 {
     public Color CalculateColor(int iterations, int maxIterations)
     {
+        // This branched if statement is ugly, but works
         int hue = 8*iterations % 1530;
-        if (hue is >= 0 and < 256) // RED
+        if (hue is >= 0 and < 256)                                          // RED
             return Color.FromArgb(255, hue, 0);
-        if (hue is >= 256 and < 512) // YELLOW
+        if (hue is >= 256 and < 512)                                        // YELLOW
             return Color.FromArgb(255 - (hue-256), 255, 0);
-        if (hue is >= 512 and < 768) // GREEN
+        if (hue is >= 512 and < 768)                                        // GREEN
             return Color.FromArgb(0, 255, hue-512);
-        if (hue is >= 768 and < 1024) // CYAN
+        if (hue is >= 768 and < 1024)                                       // CYAN
             return Color.FromArgb(0, 255 - (hue-768), 255);
-        if (hue is >= 1024 and < 1280) // BLUE
+        if (hue is >= 1024 and < 1280)                                      // BLUE
             return Color.FromArgb(hue-1024, 0, 255);
-        if (hue is >= 1280 and < 1530) // MAGENTA
+        if (hue is >= 1280 and < 1530)                                      // MAGENTA
             return Color.FromArgb(255, 0, 255 - (hue-1280));
         throw new Exception("Unreachable code reached.");
     }
@@ -161,7 +163,7 @@ public class FlipFlop(Color colorA, Color colorB) : RenderMode
 }
 
 /**
- * Maps iterations from colors[i].start to colors[i].end in size steps n times, when it will switch to i+1.
+ * Maps iterations from colors[i].start to colors[i].end in size steps n times, after which it switches to i+1. 
  */
 public class Triangle(List<(Color start, Color end)> colorList, int size, int n) : RenderMode
 {
@@ -171,6 +173,7 @@ public class Triangle(List<(Color start, Color end)> colorList, int size, int n)
 
     public Color CalculateColor(int iterations, int maxIterations)
     {
+        // What color pair to use.
         int index = iterations / (Repeat * TriangleSize) % Colors.Count;
 
         int startR = Colors[index].start.R;
@@ -180,9 +183,10 @@ public class Triangle(List<(Color start, Color end)> colorList, int size, int n)
         int endG = Colors[index].end.G;
         int endB = Colors[index].end.B;
 
+        // This calculates the level of the triangle it is,
+        // in essence, it executes a lerp on the pair of colors
         int level = iterations % TriangleSize;
         double t = level / (TriangleSize - 1.0);
-
         return Color.FromArgb(
             (int)((1 - t) * startR + t * endR),
             (int)((1 - t) * startG + t * endG),
@@ -199,9 +203,9 @@ public class Triangle(List<(Color start, Color end)> colorList, int size, int n)
     {
         Random rnd = new Random();
         int colorLength = rnd.Next(2, 5);
-        List<(Color, Color)> colors = new List<(Color, Color)>();
+        List<(Color, Color)> colors = [];
 
-        for (var i = 0; i < colorLength; i++)
+        for (int i = 0; i < colorLength; i++)
             colors.Add((
                 Color.FromArgb(255, rnd.Next(0, 256), rnd.Next(0, 256), rnd.Next(0, 256)),
                 Color.FromArgb(255, rnd.Next(0, 256), rnd.Next(0, 256), rnd.Next(0, 256)))

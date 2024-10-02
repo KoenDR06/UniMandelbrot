@@ -6,17 +6,17 @@ namespace Mandelbrot;
 public class Renderer
 {
     public int MaxIterations;
-    public RenderMode RenderMode;
     public int Cores;
     public double XCenter;
     public double YCenter;
     public double Zoom;
+    public RenderMode RenderMode;
 
-    Bitmap _image;
-    byte[] _pixelData;
-    BitmapData _imageData;
     int _resolution;
-    
+    byte[] _pixelData;
+    Bitmap _image;
+    BitmapData _imageData;
+
     public Renderer(int resolution, int maxIterations, RenderMode renderMode, int cores = 1, double xCenter = 0,
         double yCenter = 0, double zoom = 0)
     {
@@ -32,8 +32,10 @@ public class Renderer
     }
 
     
-    int IteratePoint(double zReal, double zImag, double cReal, double cImag)
+    int IteratePoint(double cReal, double cImag)
     {
+        double zReal = 0;
+        double zImag = 0;
         int iterations = 0;
         
         // This condition is just Pythagoras without the square root for performance
@@ -61,7 +63,7 @@ public class Renderer
                 double pointX = zoomExp * (4.0 * x / _resolution - 2.0) + XCenter;
                 double pointY = zoomExp * (4.0 * y / _resolution - 2.0) + YCenter;
     
-                int iterations = IteratePoint(0.0, 0.0, pointX, pointY);
+                int iterations = IteratePoint(pointX, pointY);
                 
                 Color pointColor = iterations == -1
                     ? Color.Black
@@ -109,7 +111,7 @@ public class Renderer
         }
         
         // Wait till all the threads are finished
-        foreach (var thread in threads) thread.Join();
+        foreach (Thread thread in threads) thread.Join();
 
         // Code copied from: https://stackoverflow.com/questions/1563038/fast-work-with-bitmaps-in-c-sharp
         System.Runtime.InteropServices.Marshal.Copy(_pixelData, 0, _imageData.Scan0, _pixelData.Length);
@@ -147,7 +149,7 @@ public class Renderer
                     writer.Write(BitConverter.GetBytes(triangle.TriangleSize));
                     writer.Write(BitConverter.GetBytes(triangle.Repeat));
 
-                    foreach ((var a, var b) in triangle.Colors) Utils.WriteColorPair(writer, a, b);
+                    foreach ((Color a, Color b) in triangle.Colors) Utils.WriteColorPair(writer, a, b);
                 }
 
                 writer.Flush();
@@ -165,7 +167,7 @@ public class Renderer
                 // even though we never tell it to write it, so we have to read it too.
                 reader.ReadByte();
 
-                var magicBytes = Utils.GetStringFromBytes(reader.ReadBytes(6));
+                string magicBytes = Utils.GetStringFromBytes(reader.ReadBytes(6));
                 if (magicBytes != "MANDEL") throw new Exception("Invalid file format.");
 
                 XCenter = reader.ReadDouble();
@@ -210,12 +212,12 @@ public class Renderer
                         break;
 
                     case (byte)RenderModeEnum.Triangle:
-                        var colorLength = reader.ReadInt32();
-                        var triangleSize = reader.ReadInt32();
-                        var repeat = reader.ReadInt32();
+                        int colorLength = reader.ReadInt32();
+                        int triangleSize = reader.ReadInt32();
+                        int repeat = reader.ReadInt32();
                         var colors = new List<(Color, Color)>();
 
-                        for (var i = 0; i < colorLength; i++)
+                        for (int i = 0; i < colorLength; i++)
                             colors.Add((
                                     Color.FromArgb(
                                         reader.ReadByte(),
