@@ -1,6 +1,7 @@
-/* Hallo meneer Fokker,
- *
- * Om het programma goed te gebruiken moet het .exe bestand in de exe folder. 
+/*
+ * Hallo meneer Fokker,
+ * Om het programma goed te gebruiken moet het .exe bestand in de exe folder.
+ * Mocht het nog steeds niet lukken, mail ons dan even!
  */
 
 using System.Diagnostics;
