@@ -2,3 +2,4 @@ bin/
 obj/
 render_*
 .vs
+exe/*

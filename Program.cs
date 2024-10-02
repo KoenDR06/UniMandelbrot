@@ -1,3 +1,8 @@
+/* Hallo meneer Fokker,
+ *
+ * Om het programma goed te gebruiken moet het .exe bestand in de exe folder. 
+ */
+
 using System.Diagnostics;
 using System.Reflection;
 using Mandelbrot;
@@ -89,7 +94,7 @@ ComboBox importRenderField = new ComboBox()
 locationPoint.Offset(-250 + renderModeLabel.Width + 24, 50);
 
 try {
-    foreach (string filename in Directory.GetFiles(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets", "*.mandel")) {
+    foreach (string filename in Directory.GetFiles(Directory.GetCurrentDirectory() + "\\..\\presets", "*.mandel")) {
         importRenderField.Items.Add(filename.Split("\\").Last().Split(".").First());
     }
 } catch(DirectoryNotFoundException) { /* womp womp */}
@@ -322,7 +327,7 @@ exportImageButton.Click += (_, _) =>
     string minute = date.Minute.ToString().PadLeft(2, '0');
     string second = date.Second.ToString().PadLeft(2, '0');
     
-    string filename = Directory.GetCurrentDirectory() + $"..\\..\\..\\..\\render_{year}-{month}-{day}-{hour}{minute}{second}.png";
+    string filename = Directory.GetCurrentDirectory() + $"\\..\\render_{year}-{month}-{day}-{hour}{minute}{second}.png";
     renderer.SaveRenderedImage(filename);
 };
 
@@ -337,10 +342,10 @@ exportRenderButton.Click += (_, _) =>
     string minute = date.Minute.ToString().PadLeft(2, '0');
     string second = date.Second.ToString().PadLeft(2, '0');
     
-    Directory.CreateDirectory(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\");
+    Directory.CreateDirectory(Directory.GetCurrentDirectory() + "\\..\\presets\\");
     
     string filename = Directory.GetCurrentDirectory() +
-                      $"..\\..\\..\\..\\presets\\render_{year}-{month}-{day}-{hour}{minute}{second}.mandel";
+                      $"\\..\\presets\\render_{year}-{month}-{day}-{hour}{minute}{second}.mandel";
     importRenderField.Items.Add(filename.Split("\\").Last());
     renderer.ExportMandelbrot(filename);
 };
@@ -388,9 +393,10 @@ renderModeField.TextChanged += (_, _) =>
 
 importRenderField.TextChanged += (_, _) =>
 {
+    if (rendering) return;
     importingRender = true;
     try {
-        renderer.ImportMandelbrot(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\" + importRenderField.SelectedItem + ".mandel");
+        renderer.ImportMandelbrot(Directory.GetCurrentDirectory() + "\\..\\presets\\" + importRenderField.SelectedItem + ".mandel");
     } catch(FileNotFoundException) {
         importRenderField.Items.Remove(importRenderField.SelectedItem);
         MessageBox.Show("The program did not find the selected file.");
