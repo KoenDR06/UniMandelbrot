@@ -14,8 +14,6 @@ public interface RenderMode
 {
     public Color CalculateColor(int iterations, int maxIterations);
     public byte GetId();
-
-    public bool Julia { get; set; }
 }
 
 /**
@@ -36,8 +34,6 @@ public class Grayscale : RenderMode
         return (byte)RenderModeEnum.Grayscale;
     }
 
-    public bool Julia { get; set; }
-    
     public override string ToString() {
         return "Grayscale";
     }
@@ -71,8 +67,6 @@ public class Hue : RenderMode
         return (byte)RenderModeEnum.Hue;
     }
 
-    public bool Julia { get; set; }
-    
     public override string ToString() {
         return "Hue";
     }
@@ -101,8 +95,6 @@ public class Lerp(Color startColor, Color endColor) : RenderMode
     {
         return (byte)RenderModeEnum.Lerp;
     }
-
-    public bool Julia { get; set; }
 
     public static Lerp GenerateRandom()
     {
@@ -145,8 +137,6 @@ public class FlipFlop(Color colorA, Color colorB) : RenderMode
     {
         return (byte)RenderModeEnum.FlipFlop;
     }
-
-    public bool Julia { get; set; }
 
     public static FlipFlop GenerateRandom()
     {
@@ -205,13 +195,11 @@ public class Triangle(List<(Color start, Color end)> colorList, int size, int n)
         return (byte)RenderModeEnum.Triangle;
     }
 
-    public bool Julia { get; set; }
-
     public static Triangle GenerateRandom()
     {
         Random rnd = new Random();
         int colorLength = rnd.Next(2, 5);
-        List<(Color, Color)> colors = [];
+        List<(Color, Color)> colors = new List<(Color, Color)>();
 
         for (var i = 0; i < colorLength; i++)
             colors.Add((
