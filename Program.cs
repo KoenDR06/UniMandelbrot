@@ -18,11 +18,11 @@ Icon appIcon = new Icon(stream);
 bool rendering = false;
 bool importingRender = false;
 int maxIterations = 256;
-Renderer renderer = new Renderer(800, maxIterations, Triangle.GenerateRandom());
+Renderer renderer = new Renderer(800, maxIterations, new Grayscale());
 try {
     renderer.ImportMandelbrot(Directory.GetCurrentDirectory() + "\\..\\presets\\Welcome.mandel");
 } catch {
-    MessageBox.Show("Did not find Welcome.mandel, defaulting to grayscale render.");
+    MessageBox.Show("Did not find Welcome.mandel, defaulting to grayscale render. (also cool)");
 }
 
 Form screen = new Form
