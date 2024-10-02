@@ -87,8 +87,6 @@ public class Renderer
         int size = _imageData.Stride * _imageData.Height;
         _pixelData = new byte[size];
         System.Runtime.InteropServices.Marshal.Copy(_imageData.Scan0, _pixelData, 0, size);
-
-        
         
         var threads = new List<Thread>();
 
