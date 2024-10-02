@@ -114,7 +114,10 @@ try {
     string[] mandelFiles = Directory.GetFiles(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets", "*.mandel");
     Array.Sort(mandelFiles);
     foreach (string filename in mandelFiles) {
-        importRenderField.Items.Add(filename.Split("\\").Last());
+        importRenderField.Items.Add(
+            // Selects the file name without the path and file extension
+            filename.Split("\\").Last().Split(".")[0]
+            );
     }
 } catch(DirectoryNotFoundException) {}
 
@@ -383,7 +386,6 @@ importRenderField.TextChanged += (_, _) =>
         renderer.ImportMandelbrot(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\" + importRenderField.SelectedItem);
     } catch(FileNotFoundException) {
         importRenderField.Items.Remove(importRenderField.SelectedItem);
-        renderModeField.Text = "Choose Render";
         MessageBox.Show("The program did not find the selected file.");
     }
     UpdateUIFields();
