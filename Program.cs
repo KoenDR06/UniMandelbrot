@@ -35,7 +35,8 @@ FlowLayoutPanel controlPanel = new FlowLayoutPanel
     Margin = new Padding(0),
     Padding = new Padding(0),
     BackColor = Color.FromArgb(34, 76, 91),
-    Width = 250
+    Width = 250,
+    Height = resolution
 };
  
 Label title = new Label()
@@ -131,6 +132,16 @@ Control[] controls = new Control[]
     title, zoomLabel, iterationLabel, horTransLabel, verTransLabel, renderModeField, randomiseRenderModeButton, juliaCheckBox, renderButton, resetButton,
     coreSlider, exportImageButton, exportRenderButton, importRenderField
 };
+    
+Label timeDisplay = new Label
+{
+    Text = "",
+    Size = new Size(250, 20),
+    Location = new Point(0, 775),
+    BackColor = Color.FromArgb(34, 76, 91),
+    ForeColor = Color.White,
+    Font = new Font("OCR-A Extended", 13, FontStyle.Bold),
+};
 
 foreach (Control control in controls)
     controlPanel.Controls.Add(control);
@@ -141,6 +152,7 @@ Label mandelbrotImage = new Label
     Size = new Size(resolution, resolution)
 };
 
+screen.Controls.Add(timeDisplay);
 screen.Controls.Add(controlPanel);
 screen.Controls.Add(mandelbrotImage);
 
@@ -174,6 +186,8 @@ async void Render()
 
     stopWatch.Stop();
     Console.WriteLine(stopWatch.Elapsed);
+
+    timeDisplay.Text = $"Rendering took: {stopWatch.Elapsed.Milliseconds} ms";
     
     rendering = false;
 }
@@ -187,30 +201,37 @@ void UpdateRenderParams() {
         renderer.XCenter = double.Parse(horTransLabel.InputField.Text);
         renderer.YCenter = double.Parse(verTransLabel.InputField.Text);
         renderer.Cores = coreSlider.Value;
-        
-        switch (renderModeField.Text) {
-            case "Grayscale":
-                renderer.RenderMode = new Grayscale();
-                break;
 
-            case "Hue":
-                renderer.RenderMode = new Hue();
-                break;
+        if (renderer.RenderMode.ToString() != renderModeField.Text) {
+            switch (renderModeField.Text) {
+                case "Grayscale":
+                    renderer.RenderMode = new Grayscale();
 
-            case "FlipFlop":
-                renderer.RenderMode = FlipFlop.Default();
-                break;
+                    break;
 
-            case "Lerp":
-                renderer.RenderMode = Lerp.Default();
-                break;
+                case "Hue":
+                    renderer.RenderMode = new Hue();
 
-            case "Triangle":
-                renderer.RenderMode = Triangle.Default();
-                break;
-            
-            default:
-                throw new ArgumentException("Not a renderMode");
+                    break;
+
+                case "FlipFlop":
+                    renderer.RenderMode = FlipFlop.Default();
+
+                    break;
+
+                case "Lerp":
+                    renderer.RenderMode = Lerp.Default();
+
+                    break;
+
+                case "Triangle":
+                    renderer.RenderMode = Triangle.Default();
+
+                    break;
+
+                default:
+                    throw new ArgumentException("Not a renderMode");
+            }
         }
     }
     catch {
@@ -240,24 +261,25 @@ void UpdateUIFields() {
     }
 }
 
-void OnScroll(object? o, MouseEventArgs mea)
+void Reset(object? o, EventArgs mea)
 {
     if (rendering) return;
+
+    renderer.XCenter = 0;
+    horTransLabel.InputField.Text = "0";
     
-    if (mea.Delta >= 1200)
-        renderer.MaxIterations *= 2;
-    else if (mea.Delta <= -1200)
-        renderer.MaxIterations /= 2;
-    else renderer.MaxIterations += mea.Delta / 12;
+    renderer.YCenter = 0;
+    verTransLabel.InputField.Text = "0";
+    
+    renderer.Zoom = 0;
+    zoomLabel.InputField.Text = "0";
 
-    if (renderer.MaxIterations <= 1) renderer.MaxIterations = 1;
-
-    iterationLabel.InputField.Text = renderer.MaxIterations.ToString();
+    renderer.MaxIterations = 256;
     
     Render();
 }
 
-void OnClick(object? o, MouseEventArgs mea)
+mandelbrotImage.MouseClick += (_, mea) =>
 {
     if (rendering) return;
 
@@ -285,28 +307,7 @@ void OnClick(object? o, MouseEventArgs mea)
     verTransLabel.InputField.Text = renderer.YCenter.ToString();
 
     Render();
-}
-
-void Reset(object? o, EventArgs mea)
-{
-    if (rendering) return;
-
-    renderer.XCenter = 0;
-    horTransLabel.InputField.Text = "0";
-    
-    renderer.YCenter = 0;
-    verTransLabel.InputField.Text = "0";
-    
-    renderer.Zoom = 0;
-    zoomLabel.InputField.Text = "0";
-
-    renderer.MaxIterations = 256;
-    
-    Render();
-}
-
-mandelbrotImage.MouseWheel += OnScroll;
-mandelbrotImage.MouseClick += OnClick;
+};
 renderButton.Click += (_, _) =>
 {
     UpdateRenderParams();
