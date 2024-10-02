@@ -378,6 +378,7 @@ renderModeField.TextChanged += (_, _) =>
 
 importRenderField.TextChanged += (_, _) =>
 {
+    if (rendering) return;
     importingRender = true;
     try {
         renderer.ImportMandelbrot(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\" + importRenderField.SelectedItem + ".mandel");
