@@ -7,13 +7,14 @@ int resolution = 800;
 int maxIterations = 256;
 Renderer renderer = new Renderer(resolution, maxIterations, Triangle.GenerateRandom(), Environment.ProcessorCount);
 
-// BACKLOG: Hardcoding the path to the icon is probably a bad idea
 Form screen = new Form
 {
     ClientSize = new Size(resolution + 250, resolution),
     Text = "Mandelbrot",
-    FormBorderStyle = FormBorderStyle.FixedSingle,
     Icon = new Icon("../../../icon.ico"),
+    
+    // Makes the window not resizable
+    FormBorderStyle = FormBorderStyle.FixedSingle,
     MaximizeBox = false
 };
 
@@ -26,8 +27,7 @@ FlowLayoutPanel controlPanel = new FlowLayoutPanel
     Margin = new Padding(0),
     Padding = new Padding(0),
     BackColor = Color.FromArgb(34, 76, 91),
-    Width = 250,
-    Height = resolution
+    Width = 250
 };
 
 Label title = new Label()
@@ -65,6 +65,8 @@ Button renderButton = new Button()
     ForeColor = Color.FromArgb(34, 76, 91),
     AutoSize = true
 };
+
+// Makes it that Enter "presses" the Render button
 screen.AcceptButton = renderButton;
 
 Button resetButton = new Button()
@@ -96,9 +98,11 @@ ComboBox importRenderField = new ComboBox()
     Text = "Choose Render"
 };
 
-foreach (string filename in Directory.GetFiles(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets", "*.mandel")) {
-    importRenderField.Items.Add(filename.Split("\\").Last());
-}
+try {
+    foreach (string filename in Directory.GetFiles(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets", "*.mandel")) {
+        importRenderField.Items.Add(filename.Split("\\").Last());
+    }
+} catch(DirectoryNotFoundException) {}
 
 TrackBar coreSlider = new TrackBar()
 {
@@ -146,14 +150,10 @@ screen.Controls.Add(timeDisplay);
 screen.Controls.Add(controlPanel);
 screen.Controls.Add(mandelbrotImage);
 
-// BACKLOG: de stopwatch ff weghalen? was vgm op zich alleen debugging?
 async void Render()
 {
+    // Tell the GUI to not accept any input
     rendering = true;
-
-    Stopwatch stopWatch = new Stopwatch();
-    stopWatch.Start();
-    
     exportImageButton.Enabled = false;
     exportRenderButton.Enabled = false;
     resetButton.Enabled = false;
@@ -161,24 +161,23 @@ async void Render()
     randomiseRenderModeButton.Enabled = false;
     renderButton.Text = "Rendering...";
     
+    Stopwatch stopWatch = new Stopwatch();
+    stopWatch.Start();
     await Task.Run(async () =>
     {
         mandelbrotImage.Image = await renderer.RenderMandelbrot();
         screen.Refresh();
     });
+    stopWatch.Stop();
+    timeDisplay.Text = $"Rendering took: {stopWatch.Elapsed.Milliseconds} ms";
     
+    // Tell the GUI to accept input again
     exportRenderButton.Enabled = true;
     exportImageButton.Enabled = true;
     resetButton.Enabled = true;
     renderButton.Enabled = true;
     randomiseRenderModeButton.Enabled = true;
     renderButton.Text = "Render";
-
-    stopWatch.Stop();
-    Console.WriteLine(stopWatch.Elapsed);
-
-    timeDisplay.Text = $"Rendering took: {stopWatch.Elapsed.Milliseconds} ms";
-    
     rendering = false;
 }
 
@@ -196,27 +195,22 @@ void UpdateRenderParams() {
             switch (renderModeField.Text) {
                 case "Grayscale":
                     renderer.RenderMode = new Grayscale();
-
                     break;
 
                 case "Hue":
                     renderer.RenderMode = new Hue();
-
                     break;
 
                 case "FlipFlop":
                     renderer.RenderMode = FlipFlop.Default();
-
                     break;
 
                 case "Lerp":
                     renderer.RenderMode = Lerp.Default();
-
                     break;
 
                 case "Triangle":
                     renderer.RenderMode = Triangle.Default();
-
                     break;
 
                 default:
@@ -237,18 +231,12 @@ void UpdateRenderParams() {
 }
 
 void UpdateUIFields() {
-    try {
-        zoomLabel.InputField.Text = renderer.Zoom.ToString();
-        iterationLabel.InputField.Text = renderer.MaxIterations.ToString();
-        horTransLabel.InputField.Text = renderer.XCenter.ToString();
-        verTransLabel.InputField.Text = renderer.YCenter.ToString();
-        renderModeField.Text = renderer.RenderMode.ToString();
-        coreSlider.Text = renderer.Cores.ToString();
-    }
-    catch
-    {
-        MessageBox.Show("Please make sure all the inputs are valid.");
-    }
+    zoomLabel.InputField.Text = renderer.Zoom.ToString();
+    iterationLabel.InputField.Text = renderer.MaxIterations.ToString();
+    horTransLabel.InputField.Text = renderer.XCenter.ToString();
+    verTransLabel.InputField.Text = renderer.YCenter.ToString();
+    renderModeField.Text = renderer.RenderMode.ToString();
+    coreSlider.Text = renderer.Cores.ToString();
 }
 
 void Reset(object? o, EventArgs mea)
@@ -286,10 +274,6 @@ mandelbrotImage.MouseClick += (_, mea) =>
         renderer.Zoom -= 1;
         renderer.MaxIterations -= 10;
     }
-    else if (mea.Button == MouseButtons.Middle && !renderer.Julia)
-    {
-        renderer.SetJuliaCoords(mea);
-    }
 
     zoomLabel.InputField.Text = renderer.Zoom.ToString();
     iterationLabel.InputField.Text = renderer.MaxIterations.ToString();
@@ -298,11 +282,13 @@ mandelbrotImage.MouseClick += (_, mea) =>
 
     Render();
 };
+
 renderButton.Click += (_, _) =>
 {
     UpdateRenderParams();
     Render(); 
 };
+
 resetButton.Click += Reset;
 
 exportImageButton.Click += (_, _) => 
@@ -331,10 +317,11 @@ exportRenderButton.Click += (_, _) =>
     string minute = date.Minute.ToString().PadLeft(2, '0');
     string second = date.Second.ToString().PadLeft(2, '0');
     
-    string filename = Directory.GetCurrentDirectory() + $"..\\..\\..\\..\\presets\\render_{year}-{month}-{day}-{hour}{minute}{second}.mandel";
-
-    importRenderField.Items.Add(filename.Split("\\").Last());
+    Directory.CreateDirectory(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\");
     
+    string filename = Directory.GetCurrentDirectory() +
+                      $"..\\..\\..\\..\\presets\\render_{year}-{month}-{day}-{hour}{minute}{second}.mandel";
+    importRenderField.Items.Add(filename.Split("\\").Last());
     renderer.ExportMandelbrot(filename);
 };
 
