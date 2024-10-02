@@ -317,8 +317,10 @@ renderButton.Click += (_, _) =>
 
 resetButton.Click += Reset;
 
-exportImageButton.Click += (_, _) => 
+exportImageButton.Click += async (_, _) =>
 {
+    exportImageButton.Text = "Exporting...";
+    exportImageButton.Enabled = false;
     DateTime date = DateTime.Now;
 
     string year = date.Year.ToString().PadLeft(4, '0');
@@ -329,7 +331,13 @@ exportImageButton.Click += (_, _) =>
     string second = date.Second.ToString().PadLeft(2, '0');
     
     string filename = Directory.GetCurrentDirectory() + $"\\..\\render_{year}-{month}-{day}-{hour}{minute}{second}.png";
-    renderer.SaveRenderedImage(filename);
+
+    await Task.Run(() =>
+    {
+        renderer.SaveRenderedImage(filename);
+    });
+    exportImageButton.Text = "Export as image";
+    exportImageButton.Enabled = true;
 };
 
 exportRenderButton.Click += (_, _) =>
