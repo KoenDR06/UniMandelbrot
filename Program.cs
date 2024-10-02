@@ -14,7 +14,6 @@ Assembly currentAssembly = Assembly.GetExecutingAssembly();
 Stream stream = currentAssembly.GetManifestResourceStream("Mandelbrot.icon.ico");
 Icon appIcon = new Icon(stream);
 
-
 // Settings
 bool rendering = false;
 bool importingRender = false;
