@@ -12,6 +12,7 @@ Icon appIcon = new Icon(stream);
 
 // Settings
 bool rendering = false;
+bool importingRender = false;
 int resolution = 800;
 int maxIterations = 256;
 Renderer renderer = new Renderer(resolution, maxIterations, Triangle.GenerateRandom(), Environment.ProcessorCount);
@@ -105,11 +106,14 @@ Button exportRenderButton = new Button()
 
 ComboBox importRenderField = new ComboBox()
 {
-    Text = "Choose Render"
+    Text = "Choose Render",
+    Width = 200
 };
 
 try {
-    foreach (string filename in Directory.GetFiles(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets", "*.mandel")) {
+    string[] mandelFiles = Directory.GetFiles(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets", "*.mandel");
+    Array.Sort(mandelFiles);
+    foreach (string filename in mandelFiles) {
         importRenderField.Items.Add(filename.Split("\\").Last());
     }
 } catch(DirectoryNotFoundException) {}
@@ -127,7 +131,7 @@ ComboBox renderModeField = new ComboBox()
     Text = renderer.RenderMode.ToString()
 };
 
-Control[] controls = new Control[]
+var controls = new Control[]
 {
     title, zoomLabel, iterationLabel, horTransLabel, verTransLabel, renderModeField, randomiseRenderModeButton, renderButton, resetButton,
     coreSlider, exportImageButton, exportRenderButton, importRenderField
@@ -175,7 +179,7 @@ async void Render()
         screen.Refresh();
     });
     stopWatch.Stop();
-    timeDisplay.Text = $"Rendering took: {60*stopWatch.Elapsed.Minutes+stopWatch.Elapsed.Seconds}.{stopWatch.Elapsed.Milliseconds} s";
+    timeDisplay.Text = $"Rendering took: {60*stopWatch.Elapsed.Minutes+stopWatch.Elapsed.Seconds}.{stopWatch.Elapsed.Milliseconds.ToString().PadLeft(3, '0')} s";
     
     // Tell the GUI to accept input again
     exportRenderButton.Enabled = true;
@@ -188,8 +192,7 @@ async void Render()
 }
 
 void UpdateRenderParams() {
-    try
-    {
+    try {
         renderer.Zoom = double.Parse(zoomLabel.InputField.Text);
         renderer.MaxIterations = int.Parse(iterationLabel.InputField.Text);
         if (renderer.MaxIterations <= 0) renderer.MaxIterations = 1;
@@ -351,8 +354,9 @@ randomiseRenderModeButton.Click += (_, _) =>
 renderModeField.TextChanged += (_, _) =>
 {
     if (rendering) return;
+    if (importingRender) return;
     
-    switch (renderModeField.Text) {
+    switch (renderModeField.SelectedItem) {
         case "Grayscale":
             renderer.RenderMode = new Grayscale();
             break;
@@ -367,15 +371,24 @@ renderModeField.TextChanged += (_, _) =>
             break;
         case "Triangle":
             renderer.RenderMode = Triangle.Default();
+            Console.WriteLine("here");
             break;
     }
 };
 
 importRenderField.TextChanged += (_, _) =>
 {
-    renderer.ImportMandelbrot(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\" + importRenderField.Text);
+    importingRender = true;
+    try {
+        renderer.ImportMandelbrot(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\" + importRenderField.SelectedItem);
+    } catch(FileNotFoundException) {
+        importRenderField.Items.Remove(importRenderField.SelectedItem);
+        renderModeField.Text = "Choose Render";
+        MessageBox.Show("The program did not find the selected file.");
+    }
     UpdateUIFields();
     Render();
+    importingRender = false;
 };
 
 Render();
