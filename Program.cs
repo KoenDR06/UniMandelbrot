@@ -19,7 +19,11 @@ bool rendering = false;
 bool importingRender = false;
 int maxIterations = 256;
 Renderer renderer = new Renderer(800, maxIterations, Triangle.GenerateRandom());
-renderer.ImportMandelbrot(Directory.GetCurrentDirectory() + "\\..\\presets\\Welcome.mandel");
+try {
+    renderer.ImportMandelbrot(Directory.GetCurrentDirectory() + "\\..\\presets\\Welcome.mandel");
+} catch {
+    MessageBox.Show("Did not find Welcome.mandel, defaulting to grayscale render.");
+}
 
 Form screen = new Form
 {
