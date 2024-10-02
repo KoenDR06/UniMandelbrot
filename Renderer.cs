@@ -17,13 +17,13 @@ public class Renderer
     Bitmap _image;
     BitmapData _imageData;
 
-    public Renderer(int resolution, int maxIterations, RenderMode renderMode, int cores = 1, double xCenter = 0,
+    public Renderer(int resolution, int maxIterations, RenderMode renderMode, double xCenter = 0,
         double yCenter = 0, double zoom = 0)
     {
         _resolution = resolution;
         MaxIterations = maxIterations;
         RenderMode = renderMode;
-        Cores = cores;
+        Cores = 1;
         XCenter = xCenter;
         YCenter = yCenter;
         Zoom = zoom;

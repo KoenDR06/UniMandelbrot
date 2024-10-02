@@ -15,7 +15,7 @@ bool rendering = false;
 bool importingRender = false;
 int resolution = 800;
 int maxIterations = 256;
-Renderer renderer = new Renderer(resolution, maxIterations, Triangle.GenerateRandom(), Environment.ProcessorCount);
+Renderer renderer = new Renderer(resolution, maxIterations, new Grayscale());
 
 Form screen = new Form
 {
@@ -198,7 +198,11 @@ void UpdateRenderParams() {
     try {
         renderer.Zoom = double.Parse(zoomLabel.InputField.Text);
         renderer.MaxIterations = int.Parse(iterationLabel.InputField.Text);
-        if (renderer.MaxIterations <= 0) renderer.MaxIterations = 1;
+        if (renderer.MaxIterations <= 0) {
+            renderer.MaxIterations = 2;
+            iterationLabel.InputField.Text = "2";
+        }
+        
         renderer.XCenter = double.Parse(horTransLabel.InputField.Text);
         renderer.YCenter = double.Parse(verTransLabel.InputField.Text);
         renderer.Cores = coreSlider.Value;
@@ -374,7 +378,6 @@ renderModeField.TextChanged += (_, _) =>
             break;
         case "Triangle":
             renderer.RenderMode = Triangle.Default();
-            Console.WriteLine("here");
             break;
     }
 };
@@ -383,7 +386,7 @@ importRenderField.TextChanged += (_, _) =>
 {
     importingRender = true;
     try {
-        renderer.ImportMandelbrot(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\" + importRenderField.SelectedItem);
+        renderer.ImportMandelbrot(Directory.GetCurrentDirectory() + "..\\..\\..\\..\\presets\\" + importRenderField.SelectedItem + ".mandel");
     } catch(FileNotFoundException) {
         importRenderField.Items.Remove(importRenderField.SelectedItem);
         MessageBox.Show("The program did not find the selected file.");
