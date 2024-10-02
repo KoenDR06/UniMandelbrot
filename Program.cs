@@ -230,23 +230,6 @@ void UpdateUIFields() {
     }
 }
 
-void OnScroll(object? o, MouseEventArgs mea)
-{
-    if (rendering) return;
-    
-    if (mea.Delta >= 1200)
-        renderer.MaxIterations *= 2;
-    else if (mea.Delta <= -1200)
-        renderer.MaxIterations /= 2;
-    else renderer.MaxIterations += mea.Delta / 12;
-
-    if (renderer.MaxIterations <= 1) renderer.MaxIterations = 1;
-
-    iterationLabel.InputField.Text = renderer.MaxIterations.ToString();
-    
-    Render();
-}
-
 void OnClick(object? o, MouseEventArgs mea)
 {
     if (rendering) return;
@@ -295,7 +278,6 @@ void Reset(object? o, EventArgs mea)
     Render();
 }
 
-mandelbrotImage.MouseWheel += OnScroll;
 mandelbrotImage.MouseClick += OnClick;
 renderButton.Click += (_, _) =>
 {
