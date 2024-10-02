@@ -1,5 +1,14 @@
 using System.Diagnostics;
+using System.Reflection;
 using Mandelbrot;
+
+// Import and use embedded resources
+Assembly currentAssembly = Assembly.GetExecutingAssembly();
+string[] resourceNames = currentAssembly.GetManifestResourceNames();
+
+Stream stream = currentAssembly.GetManifestResourceStream("Mandelbrot.icon.ico");
+Icon appIcon = new Icon(stream);
+
 
 // Settings
 bool rendering = false;
@@ -13,7 +22,7 @@ Form screen = new Form
     ClientSize = new Size(resolution + 250, resolution),
     Text = "Mandelbrot",
     FormBorderStyle = FormBorderStyle.FixedSingle,
-    Icon = new Icon("../../../icon.ico"),
+    Icon = appIcon,
     MaximizeBox = false
 };
 
@@ -28,7 +37,7 @@ FlowLayoutPanel controlPanel = new FlowLayoutPanel
     BackColor = Color.FromArgb(34, 76, 91),
     Width = 250
 };
-
+ 
 Label title = new Label()
 {
     Text = "Mandelbrot",
@@ -117,10 +126,11 @@ CheckBox juliaCheckBox = new CheckBox
     Checked = renderer.Julia
 };
 
-Control[] controls = [
+Control[] controls = new Control[]
+{
     title, zoomLabel, iterationLabel, horTransLabel, verTransLabel, renderModeField, randomiseRenderModeButton, juliaCheckBox, renderButton, resetButton,
     coreSlider, exportImageButton, exportRenderButton, importRenderField
-];
+};
 
 foreach (Control control in controls)
     controlPanel.Controls.Add(control);
