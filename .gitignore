@@ -1,5 +1,3 @@
 bin/
 obj/
 render_*
-render.png
-mandelbrot.png

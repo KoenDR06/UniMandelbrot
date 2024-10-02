@@ -31,6 +31,7 @@ public class Renderer
         _image = new Bitmap(_resolution, _resolution, PixelFormat.Format24bppRgb);
     }
 
+    
     int IteratePoint(double zReal, double zImag, double cReal, double cImag)
     {
         int iterations = 0;
@@ -87,6 +88,8 @@ public class Renderer
         _pixelData = new byte[size];
         System.Runtime.InteropServices.Marshal.Copy(_imageData.Scan0, _pixelData, 0, size);
 
+        
+        
         var threads = new List<Thread>();
 
         for (int i = 0; i < Cores; i++)
@@ -114,14 +117,12 @@ public class Renderer
 
         return Task.FromResult(_image);
     }
-
-    // Exporting the settings instead of bytes can cause _slight_ differences due to rounding
-    // hence the custom file
+    
     public void ExportMandelbrot(string filename)
     {
-        using (var stream = File.Open(filename, FileMode.Create))
+        using (FileStream stream = File.Open(filename, FileMode.Create))
         {
-            using (var writer = new BinaryWriter(stream, Encoding.UTF8, false))
+            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false))
             {
                 // Magic bytes
                 writer.Write("MANDEL");
@@ -156,12 +157,12 @@ public class Renderer
 
     public void ImportMandelbrot(string filename)
     {
-        using (var stream = File.Open(filename, FileMode.Open))
+        using (FileStream stream = File.Open(filename, FileMode.Open))
         {
-            using (var reader = new BinaryReader(stream, Encoding.UTF8, false))
+            using (BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, false))
             {
-                // For some reason the byte 0x06 is added to the beginning of the file, even though I never tell it
-                // to write it, so I have to read it too.
+                // For some reason the byte 0x06 is added to the beginning of the file,
+                // even though we never tell it to write it, so we have to read it too.
                 reader.ReadByte();
 
                 var magicBytes = Utils.GetStringFromBytes(reader.ReadBytes(6));
@@ -235,15 +236,13 @@ public class Renderer
             }
         }
     }
-
-    // BACKLOG: add these settings to the main control panel
+    
     public async void SaveRenderedImage(string filename)
     {
         int oldMaxIterations = MaxIterations;
         _resolution *= 2;
         MaxIterations = 4096;
         
-        // BACKLOG: For some reason the image only appears after closing the program
         Bitmap render = await RenderMandelbrot();
         render.Save(filename, ImageFormat.Png);
         
