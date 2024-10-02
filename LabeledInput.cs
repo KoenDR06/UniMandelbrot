@@ -12,17 +12,18 @@ public class LabeledInput : Control
             Text = label,
             TextAlign = ContentAlignment.MiddleLeft,
             AutoSize = true,
-            ForeColor = Color.White,
+            ForeColor = globals.textForeColor,
             Location = location
         };
         
         location.Offset(250 - TextLabel.Width - location.X - 12, 0);
         InputField = new TextBox()
         {
-            BackColor = Color.Azure,
+            BackColor = globals.textForeColor,
             Text = placeholderValue,
             AutoSize = true,
-            Location = location
+            Location = location,
+            BorderStyle = BorderStyle.FixedSingle
         };
     }
 }

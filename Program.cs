@@ -4,7 +4,6 @@ using Mandelbrot;
 
 // Import and use embedded resources
 Assembly currentAssembly = Assembly.GetExecutingAssembly();
-string[] resourceNames = currentAssembly.GetManifestResourceNames();
 
 Stream stream = currentAssembly.GetManifestResourceStream("Mandelbrot.icon.ico");
 Icon appIcon = new Icon(stream);
@@ -36,7 +35,7 @@ Label title = new Label()
     Text = "MandelScope",
     Font = new Font("Bahnschrift", 18, FontStyle.Bold),
     AutoSize = true,
-    ForeColor = Color.White,
+    ForeColor = globals.textForeColor,
     Location = locationPoint
 };
 locationPoint.Offset(0, 40);;
@@ -55,7 +54,7 @@ Label renderModeLabel = new Label()
     Text = "Render mode:",
     TextAlign = ContentAlignment.MiddleLeft,
     AutoSize = true,
-    ForeColor = Color.White,
+    ForeColor = globals.textForeColor,
     Location = locationPoint
 };
 locationPoint.Offset(250 - renderModeLabel.Width - 24, 0);
@@ -64,7 +63,8 @@ ComboBox renderModeField = new ComboBox()
     Items = { "Grayscale", "Hue", "Lerp", "FlipFlop", "Triangle" },
     Text = renderer.RenderMode.ToString(),
     Location = locationPoint,
-    Width = 100
+    Width = 100,
+    FlatStyle = FlatStyle.Flat
 };
 locationPoint.Offset(-250 + renderModeLabel.Width + 24, 30);
 
@@ -74,7 +74,7 @@ Label presetsLabel = new Label()
     Text = "Or choose a preset:",
     TextAlign = ContentAlignment.MiddleLeft,
     AutoSize = true,
-    ForeColor = Color.White,
+    ForeColor = globals.textForeColor,
     Location = locationPoint
 };
 locationPoint.Offset(250 - renderModeLabel.Width - 24, 0);
@@ -83,7 +83,8 @@ ComboBox importRenderField = new ComboBox()
 {
     Text = "Choose preset",
     Location = locationPoint,
-    Width = 100
+    Width = 100,
+    FlatStyle = FlatStyle.Flat
 };
 locationPoint.Offset(-250 + renderModeLabel.Width + 24, 50);
 
@@ -111,7 +112,7 @@ Label coreLabel = new Label()
     Text = "Cores to use:",
     TextAlign = ContentAlignment.MiddleLeft,
     AutoSize = true,
-    ForeColor = Color.White,
+    ForeColor = globals.textForeColor,
     Location = locationPoint
 };
 locationPoint.Offset(250 - renderModeLabel.Width - 24, 0);
@@ -124,14 +125,26 @@ TrackBar coreSlider = new TrackBar()
     TickStyle = TickStyle.None,
     Width = 100
 };
-locationPoint.Offset(-250 + renderModeLabel.Width + 24, 50);
+locationPoint.Offset(-250 + renderModeLabel.Width + 24, 80);
+
+Label explainer = new Label()
+{
+    Text = "ℹ MANDELBROT CONTROLS:\n" +
+           "    Left click zooms in, right click zooms out. Middle clicking centers the clicked location. \n\n" +
+           "ℹ INPUT CONTROLS:\n" +
+           "    Pressing enter whilst in any input field will render again, and also disable any inputs until completion. " +
+           "The core slider selects an amount of cores to use (with a maximum of the system limit)",
+    Location = locationPoint,
+    AutoSize = true,
+    MaximumSize = new Size(250-24, 0),
+    ForeColor = globals.textForeColor
+};
 
 Label timeDisplay = new Label
 {
     Size = new Size(250, 20),
     Location = new Point(0, 800 - 20),
-    BackColor = Color.FromArgb(34, 76, 91),
-    ForeColor = Color.White,
+    ForeColor = globals.textForeColor,
 };
 
 Label mandelbrotImage = new Label
@@ -152,20 +165,21 @@ Control[] controlList =
 {
     title, renderModeField, randomiseRenderModeButton, renderButton, resetButton, coreSlider,
     exportImageButton, exportRenderButton, importRenderField, timeDisplay, mandelbrotImage, renderModeLabel,
-    presetsLabel, coreLabel
+    presetsLabel, coreLabel, explainer
 };
 foreach (var control in controlList) screen.Controls.Add(control);
 
-
+Control[] disableList =
+{
+    renderModeField, randomiseRenderModeButton, renderButton, resetButton, coreSlider,
+    exportImageButton, exportRenderButton, importRenderField, zoomLabel.InputField,
+    iterationLabel.InputField, horTransLabel.InputField, verTransLabel.InputField
+};
 async void Render()
 {
     // Tell the GUI to not accept any input
     rendering = true;
-    exportImageButton.Enabled = false;
-    exportRenderButton.Enabled = false;
-    resetButton.Enabled = false;
-    renderButton.Enabled = false;
-    randomiseRenderModeButton.Enabled = false;
+    foreach (var con in disableList) con.Enabled = false;
     renderButton.Text = "Rendering...";
     
     Stopwatch stopWatch = new Stopwatch();
@@ -179,12 +193,8 @@ async void Render()
     timeDisplay.Text = $"Rendering took: {60*stopWatch.Elapsed.Minutes+stopWatch.Elapsed.Seconds}.{stopWatch.Elapsed.Milliseconds.ToString().PadLeft(3, '0')} s";
     
     // Tell the GUI to accept input again
-    exportRenderButton.Enabled = true;
-    exportImageButton.Enabled = true;
-    resetButton.Enabled = true;
-    renderButton.Enabled = true;
-    randomiseRenderModeButton.Enabled = true;
     renderButton.Text = "Render";
+    foreach (var con in disableList) con.Enabled = true;
     rendering = false;
 }
 
@@ -253,7 +263,7 @@ void Reset(object? o, EventArgs mea)
 {
     if (rendering) return;
 
-    renderer.XCenter = 0;
+    renderer.XCenter = -0.5;
     horTransLabel.InputField.Text = "0";
     
     renderer.YCenter = 0;
